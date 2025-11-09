@@ -57,9 +57,13 @@
                                 </nav>
                             </div>
                             <div class="table-responsive">
-                                <table class="table">
+                                <table class="table align-middle">
                                     <thead>
                                         <tr>
+                                            <th scope="col" class="cart-select-column">
+                                                <input type="checkbox" class="form-check-input" id="cartSelectAll"
+                                                    data-cart-select-all aria-label="Chọn tất cả" />
+                                            </th>
                                             <th scope="col">Sản phẩm</th>
                                             <th scope="col">Tên</th>
                                             <th scope="col">Giá cả</th>
@@ -71,13 +75,18 @@
                                     <tbody>
                                         <c:if test="${empty cartDetails}">
                                             <tr>
-                                                <td colspan="6">
+                                                <td colspan="7">
                                                     Không có sản phẩm trong giỏ hàng
                                                 </td>
                                             </tr>
                                         </c:if>
                                         <c:forEach var="cartDetail" items="${cartDetails}" varStatus="status">
-                                            <tr>
+                                            <tr class="cart-row" data-cart-row-id="${cartDetail.id}">
+                                                <td class="cart-select-cell">
+                                                    <input type="checkbox" class="form-check-input"
+                                                        data-cart-select data-cart-detail-id="${cartDetail.id}"
+                                                        value="${cartDetail.id}" aria-label="Chọn sản phẩm" />
+                                                </td>
                                                 <th scope="row">
                                                     <div class="d-flex align-items-center">
                                                         <img src="/images/product/${cartDetail.product.image}"
@@ -123,7 +132,8 @@
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <p class="mb-0 mt-4" data-cart-detail-id="${cartDetail.id}">
+                                                    <p class="mb-0 mt-4 cart-price-accent"
+                                                        data-cart-detail-id="${cartDetail.id}">
                                                         <fmt:formatNumber type="number"
                                                             value="${cartDetail.price * cartDetail.quantity}" /> đ
                                                     </p>
@@ -150,10 +160,10 @@
                                 <div class="mt-5 row g-4 justify-content-start">
                                     <div class="col-12 col-md-8">
                                         <div class="bg-light rounded">
-                                            <div class="p-4">
-                                                <h1 class="display-6 mb-4">Thông Tin <span class="fw-normal">Đơn
-                                                        Hàng</span>
-                                                </h1>
+                                                <div class="p-4">
+                                                    <h1 class="display-6 mb-4 order-summary-heading">
+                                                        Thông Tin Đơn Hàng
+                                                    </h1>
                                                 <div class="d-flex justify-content-between mb-4">
                                                     <h5 class="mb-0 me-4">Tạm tính:</h5>
                                                     <p class="mb-0" data-cart-total-price="${totalPrice}">
@@ -167,16 +177,19 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div
-                                                class="py-4 mb-4 border-top border-bottom d-flex justify-content-between">
-                                                <h5 class="mb-0 ps-4 me-4">Tổng số tiền</h5>
-                                                <p class="mb-0 pe-4" data-cart-total-price="${totalPrice}">
-                                                    <fmt:formatNumber type="number" value="${totalPrice}" /> đ
-                                                </p>
-                                            </div>
-                                            <form:form action="/order/checkout" method="post" modelAttribute="cart">
+                                                <div
+                                                    class="py-4 mb-4 border-top border-bottom d-flex justify-content-between">
+                                                    <h5 class="mb-0 ps-4 me-4">Tổng số tiền</h5>
+                                                    <p class="mb-0 pe-4 cart-total-accent" data-cart-total-price="${totalPrice}">
+                                                        <fmt:formatNumber type="number" value="${totalPrice}" /> đ
+                                                    </p>
+                                                </div>
+                                            <form:form action="/order/checkout" method="post" modelAttribute="cart"
+                                                id="cartSelectionForm">
                                                 <input type="hidden" name="${_csrf.parameterName}"
                                                     value="${_csrf.token}" />
+                                                <input type="hidden" name="selectedCartDetailIds"
+                                                    id="selectedCartDetailIdsField" />
                                                 <div style="display: none;">
                                                     <c:forEach var="cartDetail" items="${cart.cartDetails}"
                                                         varStatus="status">

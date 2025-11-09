@@ -356,3 +356,71 @@ body {
 /*============================
     thông tin người dùng hiện ra khi di chuột vô
 ============================*/
+
+/* ============================
+   Cart selection helpers
+============================= */
+.cart-select-column {
+  width: 48px;
+  text-align: center;
+}
+
+.cart-select-cell {
+  width: 48px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cart-select-cell input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.cart-row--muted {
+  opacity: 0.45;
+}
+
+.cart-price-accent,
+.cart-total-accent {
+  color: #e03131;
+  font-weight: 600;
+}
+
+.cart-total-accent {
+  font-size: 1.05rem;
+}
+
+.order-summary-heading {
+  font-weight: 700;
+  font-size: clamp(1.75rem, 2vw, 2.3rem);
+  line-height: 1.2;
+  color: #364152;
+}
+
+.order-summary-heading span {
+  font-weight: inherit;
+  font-size: inherit;
+}
+
+.checkout-section {
+  padding-top: clamp(1.5rem, 4vw, 3rem);
+}
+
+.checkout-page-title {
+  margin-top: clamp(1rem, 3vw, 2.5rem);
+}
+
+.checkout-form-column {
+  margin-top: clamp(0.5rem, 2vw, 1.75rem);
+}
+
+@media (min-width: 992px) {
+  .checkout-section {
+    padding-top: 4rem;
+  }
+
+  .checkout-form-column {
+    margin-top: 2.5rem;
+  }
+}

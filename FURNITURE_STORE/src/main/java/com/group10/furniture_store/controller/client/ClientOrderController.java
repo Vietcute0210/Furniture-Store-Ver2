@@ -1,5 +1,7 @@
 package com.group10.furniture_store.controller.client;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +27,9 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/order")
 public class ClientOrderController {
+    //them dong duoi
+    private static final String SELECTED_CART_DETAILS_SESSION_KEY = "selectedCartDetailIds";
+
     @Autowired
     private ProductService productService;
 
@@ -40,6 +45,8 @@ public class ClientOrderController {
     @GetMapping("/checkout")
     public String getCheckoutPage(Model model, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        //them dong duoi
+        List<Long> selectedIds = getSelectedIdsFromSession(session);
 
         Long cartId = (Long) session.getAttribute("cartId");
         if (cartId == null) {
@@ -56,6 +63,21 @@ public class ClientOrderController {
         if (cartDetails == null || cartDetails.isEmpty()) {
             return "redirect:/cart";
         }
+        //===========viet them ==============
+        if (!selectedIds.isEmpty()) {
+            List<CartDetails> filtered = new ArrayList<>();
+            for (CartDetails cd : cartDetails) {
+                if (cd != null && selectedIds.contains(cd.getId())) {
+                    filtered.add(cd);
+                }
+            }
+            cartDetails = filtered;
+        }
+
+        if (cartDetails.isEmpty()) {
+            return "redirect:/cart";
+        }
+        //====================================
 
         double totalPrice = 0;
         for (CartDetails cd : cartDetails) {
@@ -69,9 +91,16 @@ public class ClientOrderController {
     }
 
     @PostMapping("/checkout")
-    public String postCheckoutPage(Model model, HttpServletRequest request) {
+    public String postCheckoutPage(Model model, HttpServletRequest request,
+            @RequestParam(value = "selectedCartDetailIds", required = false) String selectedCartDetailIds) {
+        HttpSession session = request.getSession();
+        List<Long> parsedIds = parseSelectedIds(selectedCartDetailIds);
+        if (parsedIds.isEmpty()) {
+            session.removeAttribute(SELECTED_CART_DETAILS_SESSION_KEY);
+        } else {
+            session.setAttribute(SELECTED_CART_DETAILS_SESSION_KEY, parsedIds);
+        }
         return getCheckoutPage(model, request);
-
     }
 
     @PostMapping("/place-order")
@@ -98,7 +127,10 @@ public class ClientOrderController {
                 receiverPhone,
                 paymentMethod,
                 uuid,
-                Double.parseDouble(totalPrice));
+                Double.parseDouble(totalPrice),
+                getSelectedIdsFromSession(session));
+
+        session.removeAttribute(SELECTED_CART_DETAILS_SESSION_KEY);
 
         return "redirect:/order/after-order";
     }
@@ -117,5 +149,36 @@ public class ClientOrderController {
                 "Furniture Store chân thành cảm ơn bạn đã tin tưởng sử dụng sản phẩm của chúng tôi!");
 
         return "client/cart/after-order";
+    }
+    //=============viet them ==============
+    private List<Long> parseSelectedIds(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Collections.emptyList();
+        }
+        String[] parts = raw.split(",");
+        List<Long> result = new ArrayList<>();
+        for (String part : parts) {
+            try {
+                result.add(Long.parseLong(part.trim()));
+            } catch (NumberFormatException ignored) {
+                // skip invalid values
+            }
+        }
+        return result;
+    }
+
+    private List<Long> getSelectedIdsFromSession(HttpSession session) {
+        Object data = session.getAttribute(SELECTED_CART_DETAILS_SESSION_KEY);
+        if (data instanceof List<?>) {
+            List<?> rawList = (List<?>) data;
+            List<Long> result = new ArrayList<>();
+            for (Object value : rawList) {
+                if (value instanceof Number number) {
+                    result.add(number.longValue());
+                }
+            }
+            return result;
+        }
+        return Collections.emptyList();
     }
 }

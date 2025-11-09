@@ -173,12 +173,34 @@ public class ProductService {
 
     @Transactional
     public void handlePlaceOrder(User user, HttpSession session, String receiverName, String receiverAddress,
-            String receiverPhone, String paymentMethod, String uuid, Double totalPrice) {
+            String receiverPhone, String paymentMethod, String uuid, Double totalPrice,
+            List<Long> selectedCartDetailIds) {
         // Get cart by user
         Cart cart = this.cartRepository.findByUser(user);
         if (cart != null) {
             List<CartDetails> cartDetails = cart.getCartDetails();
-            if (cartDetails != null) {
+            if (cartDetails != null && !cartDetails.isEmpty()) {
+                List<CartDetails> orderItems = cartDetails;
+                if (selectedCartDetailIds != null && !selectedCartDetailIds.isEmpty()) {
+                    Set<Long> selectedIdSet = selectedCartDetailIds.stream()
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toSet());
+                    orderItems = cartDetails.stream()
+                            .filter(cd -> cd != null && selectedIdSet.contains(cd.getId()))
+                            .collect(Collectors.toList());
+                }
+
+                if (orderItems.isEmpty()) {
+                    return;
+                }
+
+                double calculatedTotal = orderItems.stream()
+                        .mapToDouble(cd -> cd.getPrice() * cd.getQuantity())
+                        .sum();
+                double resolvedTotal = calculatedTotal > 0
+                        ? calculatedTotal
+                        : (totalPrice != null ? totalPrice : 0d);
+
                 // Create order
                 Order order = new Order();
                 order.setUser(user);
@@ -191,12 +213,12 @@ public class ProductService {
                 order.setPaymentMethod(paymentMethod);
                 order.setPaymentStatus("Thanh toán thành công");
                 order.setPaymentRef(paymentMethod.equals("COD") ? "UNKNOWN" : uuid);
-                order.setTotalPrice(totalPrice);
+                order.setTotalPrice(resolvedTotal);
                 order = this.orderRepository.save(order);
 
                 // create orderDetail
 
-                for (CartDetails cd : cartDetails) {
+                for (CartDetails cd : orderItems) {
                     OrderDetail orderDetail = new OrderDetail();
                     orderDetail.setOrder(order);
                     orderDetail.setProduct(cd.getProduct());
@@ -207,13 +229,20 @@ public class ProductService {
                 }
 
                 // Delete cart_detail and cart sau đó
-                for (CartDetails cd : cartDetails) {
-                    // xóa từng cartdetails trong cart trước rồi mới xóa cart
+                for (CartDetails cd : orderItems) {
                     this.cartDetailsRepository.deleteById(cd.getId());
                 }
-                this.cartRepository.deleteById(cart.getId());
-                // update session
-                session.setAttribute("sum", 0);
+
+                if (orderItems.size() == cartDetails.size()) {
+                    this.cartRepository.deleteById(cart.getId());
+                    session.setAttribute("sum", 0);
+                } else {
+                    long currentSum = cart.getSum() == null ? 0L : cart.getSum();
+                    long newSum = Math.max(0L, currentSum - orderItems.size());
+                    cart.setSum(newSum);
+                    this.cartRepository.save(cart);
+                    session.setAttribute("sum", newSum);
+                }
             }
         }
     }

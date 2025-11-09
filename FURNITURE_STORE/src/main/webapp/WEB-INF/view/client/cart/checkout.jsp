@@ -35,14 +35,14 @@
 
                     <!-- Checkout -->
                     <div class="container-fluid py-5">
-                        <div class="container py-5">
-                            <h1 class="mb-4">Thanh toán đơn hàng</h1>
+                        <div class="container py-5 checkout-section">
+                            <h1 class="mb-4 checkout-page-title">Thanh toán đơn hàng</h1>
                             <form action="/order/create" method="post" id="checkoutForm">
                                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
 
                                 <div class="row g-5">
                                     <!-- Thông tin người nhận -->
-                                    <div class="col-md-12 col-lg-6 col-xl-7">
+                                    <div class="col-md-12 col-lg-6 col-xl-7 checkout-form-column">
                                         <div class="row">
                                             <div class="col-md-12 col-lg-6">
                                                 <div class="form-item w-100">
@@ -116,7 +116,8 @@
                                                                 </p>
                                                             </td>
                                                             <td>
-                                                                <p class="mb-0 mt-4" data-cart-detail-id="${cartDetail.id}">
+                                                                <p class="mb-0 mt-4 cart-price-accent"
+                                                                    data-cart-detail-id="${cartDetail.id}">
                                                                     <fmt:formatNumber type="number"
                                                                         value="${cartDetail.price * cartDetail.quantity}" />
                                                                     đ
@@ -133,7 +134,7 @@
                                                         </td>
                                                         <td class="py-5">
                                                             <div class="py-3 border-bottom border-top">
-                                                                <p class="mb-0 text-dark" id="totalPrice"
+                                                                <p class="mb-0 cart-total-accent" id="totalPrice"
                                                                     data-cart-total-price="true">
                                                                     <fmt:formatNumber type="number"
                                                                         value="${totalPrice}" /> đ
