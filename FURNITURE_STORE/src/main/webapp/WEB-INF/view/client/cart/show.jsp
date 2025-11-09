@@ -1,7 +1,8 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-        <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-            <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+    <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+        <fmt:setLocale value="vi_VN" />
 
                 <!DOCTYPE html>
                 <html lang="en">
@@ -39,24 +40,31 @@
                         <div class="spinner-grow text-primary" role="status"></div>
                     </div>
                     <!-- Spinner End -->
-                    <jsp:include page="../layout/header.jsp" />
-                    <div class="container-fluid py-5">
-                        <div class="container py-5">
-                            <div class="mb-3">
-                                <nav aria-label="breadcrumb">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item">
-                                            <a href="/">
-                                                Home
-                                            </a>
-                                        </li>
-                                        <li class="breadcrumb-item active" aria-current="page">
-                                            Chi Tiết Giỏ Hàng
-                                        </li>
-                                    </ol>
-                                </nav>
-                            </div>
-                            <div class="table-responsive">
+        <jsp:include page="../layout/header.jsp" />
+        <div class="container-fluid py-5 cart-page-wrapper">
+            <div class="container py-5 cart-page">
+                <div class="cart-hero">
+                    <div>
+                        <p class="cart-hero__eyebrow">Giỏ hàng của bạn</p>
+                        <h1 class="cart-hero__title">Chi tiết giỏ hàng</h1>
+                        <p class="cart-hero__subtitle">
+                            Kiểm tra lại sản phẩm và số lượng trước khi tiến hành thanh toán.
+                        </p>
+                    </div>
+                    <nav aria-label="breadcrumb" class="cart-hero__breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="/">
+                                    Home
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                Chi tiết giỏ hàng
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="table-responsive cart-table-card">
                                 <table class="table align-middle">
                                     <thead>
                                         <tr>
@@ -159,7 +167,7 @@
                             <c:if test="${not empty cartDetails}">
                                 <div class="mt-5 row g-4 justify-content-start">
                                     <div class="col-12 col-md-8">
-                                        <div class="bg-light rounded">
+                                        <div class="cart-summary-card bg-light rounded">
                                                 <div class="p-4">
                                                     <h1 class="display-6 mb-4 order-summary-heading">
                                                         Thông Tin Đơn Hàng

@@ -40,139 +40,172 @@
                             <form action="/order/create" method="post" id="checkoutForm">
                                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
 
-                                <div class="row g-5">
+                                <div class="row g-5 align-items-start">
                                     <!-- Thông tin người nhận -->
-                                    <div class="col-md-12 col-lg-6 col-xl-7 checkout-form-column">
-                                        <div class="row">
-                                            <div class="col-md-12 col-lg-6">
-                                                <div class="form-item w-100">
-                                                    <label class="form-label my-3">Họ và tên<sup>*</sup></label>
-                                                    <input type="text" class="form-control" name="receiverName"
-                                                        required>
+                                    <div class="col-md-12 col-lg-6 col-xl-6 checkout-form-column">
+                                        <div class="checkout-card checkout-form-card">
+                                            <div class="checkout-card__head">
+                                                <span class="checkout-card__icon">
+                                                    <i class="fas fa-address-card"></i>
+                                                </span>
+                                                <div>
+                                                    <p class="checkout-card__eyebrow">Thông tin nhận hàng</p>
+                                                    <h3 class="checkout-card__title">Chi tiết người nhận</h3>
                                                 </div>
                                             </div>
-                                            <div class="col-md-12 col-lg-6">
-                                                <div class="form-item w-100">
-                                                    <label class="form-label my-3">Số điện thoại<sup>*</sup></label>
-                                                    <input type="tel" class="form-control" name="receiverPhone"
-                                                        required>
+                                            <div class="row g-4">
+                                                <div class="col-12 col-lg-6">
+                                                    <div class="form-item w-100">
+                                                        <label class="form-label my-3">Họ và tên<sup>*</sup></label>
+                                                        <input type="text" class="form-control" name="receiverName"
+                                                            required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 col-lg-6">
+                                                    <div class="form-item w-100">
+                                                        <label class="form-label my-3">Số điện thoại<sup>*</sup></label>
+                                                        <input type="tel" class="form-control" name="receiverPhone"
+                                                            required>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="form-item">
-                                            <label class="form-label my-3">Địa chỉ<sup>*</sup></label>
-                                            <input type="text" class="form-control" name="receiverAddress" required>
-                                        </div>
-                                        <div class="form-item">
-                                            <label class="form-label my-3">Ghi chú</label>
-                                            <textarea class="form-control" name="note" rows="3"></textarea>
+                                            <div class="form-item">
+                                                <label class="form-label my-3">Địa chỉ<sup>*</sup></label>
+                                                <input type="text" class="form-control" name="receiverAddress" required>
+                                            </div>
+                                            <div class="form-item">
+                                                <label class="form-label my-3">Ghi chú</label>
+                                                <textarea class="form-control" name="note" rows="3"
+                                                    placeholder="Ví dụ: Giao sau 18h, gọi trước khi đến..."></textarea>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- Thông tin đơn hàng & thanh toán -->
-                                    <div class="col-md-12 col-lg-6 col-xl-5">
-                                        <!-- Thông tin đơn hàng -->
-                                        <div class="table-responsive">
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col">Sản phẩm</th>
-                                                        <th scope="col">Tên</th>
-                                                        <th scope="col">Giá</th>
-                                                        <th scope="col">Số lượng</th>
-                                                        <th scope="col">Tổng</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <c:forEach var="cartDetail" items="${cartDetails}">
+                                    <div class="col-md-12 col-lg-6 col-xl-6">
+                                        <div class="checkout-card checkout-summary-card">
+                                            <div class="checkout-card__head">
+                                                <span class="checkout-card__icon checkout-card__icon--accent">
+                                                    <i class="fas fa-shopping-basket"></i>
+                                                </span>
+                                                <div>
+                                                    <p class="checkout-card__eyebrow">Đơn hàng của bạn</p>
+                                                    <h3 class="checkout-card__title">Sản phẩm & thanh toán</h3>
+                                                </div>
+                                            </div>
+                                            <!-- Thông tin đơn hàng -->
+                                            <div class="table-responsive checkout-summary-table-wrapper">
+                                                <table class="table checkout-summary-table">
+                                                    <thead>
                                                         <tr>
-                                                            <th scope="row">
-                                                                <div class="d-flex align-items-center">
-                                                                    <img src="/images/product/${cartDetail.product.image}"
-                                                                        class="img-fluid me-5 rounded-circle"
-                                                                        style="width: 80px; height: 80px;" alt="">
-                                                                </div>
-                                                            </th>
-                                                            <td>
-                                                                <p class="mb-0 mt-4">${cartDetail.product.name}</p>
-                                                            </td>
-                                                            <td>
-                                                                <p class="mb-0 mt-4">
-                                                                    <span data-checkout-unit-price="true"
-                                                                        data-cart-detail-id="${cartDetail.id}"
-                                                                        data-cart-detail-price="${cartDetail.price}">
-                                                                        <fmt:formatNumber type="number"
-                                                                            value="${cartDetail.price}" />
-                                                                    </span>
-                                                                    đ
-                                                                </p>
-                                                            </td>
-                                                            <td>
-                                                                <p class="mb-0 mt-4">
-                                                                    <span data-checkout-quantity="true"
+                                                            <th scope="col">Sản phẩm</th>
+                                                            <th scope="col">Tên</th>
+                                                            <th scope="col">Giá</th>
+                                                            <th scope="col">Số lượng</th>
+                                                            <th scope="col">Tổng</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <c:forEach var="cartDetail" items="${cartDetails}">
+                                                            <tr>
+                                                                <th scope="row">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <img src="/images/product/${cartDetail.product.image}"
+                                                                            class="img-fluid me-3 rounded-3"
+                                                                            style="width: 70px; height: 70px;" alt="">
+                                                                    </div>
+                                                                </th>
+                                                                <td>
+                                                                    <p class="mb-0">${cartDetail.product.name}</p>
+                                                                </td>
+                                                                <td>
+                                                                    <p class="mb-0">
+                                                                        <span data-checkout-unit-price="true"
+                                                                            data-cart-detail-id="${cartDetail.id}"
+                                                                            data-cart-detail-price="${cartDetail.price}">
+                                                                            <fmt:formatNumber type="number"
+                                                                                value="${cartDetail.price}" />
+                                                                        </span>
+                                                                        đ
+                                                                    </p>
+                                                                </td>
+                                                                <td>
+                                                                    <p class="mb-0">
+                                                                        <span data-checkout-quantity="true"
+                                                                            data-cart-detail-id="${cartDetail.id}">
+                                                                            ${cartDetail.quantity}
+                                                                        </span>
+                                                                    </p>
+                                                                </td>
+                                                                <td>
+                                                                    <p class="mb-0 cart-price-accent"
                                                                         data-cart-detail-id="${cartDetail.id}">
-                                                                        ${cartDetail.quantity}
-                                                                    </span>
-                                                                </p>
+                                                                        <fmt:formatNumber type="number"
+                                                                            value="${cartDetail.price * cartDetail.quantity}" />
+                                                                        đ
+                                                                    </p>
+                                                                </td>
+                                                            </tr>
+                                                        </c:forEach>
+                                                        <tr class="checkout-summary-total">
+                                                            <th scope="row"></th>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td>
+                                                                <p class="mb-0 text-dark">Tổng tiền</p>
                                                             </td>
                                                             <td>
-                                                                <p class="mb-0 mt-4 cart-price-accent"
-                                                                    data-cart-detail-id="${cartDetail.id}">
-                                                                    <fmt:formatNumber type="number"
-                                                                        value="${cartDetail.price * cartDetail.quantity}" />
-                                                                    đ
-                                                                </p>
+                                                                <div class="py-3 border-bottom border-top">
+                                                                    <p class="mb-0 cart-total-accent" id="totalPrice"
+                                                                        data-cart-total-price="true">
+                                                                        <fmt:formatNumber type="number"
+                                                                            value="${totalPrice}" /> đ
+                                                                    </p>
+                                                                </div>
                                                             </td>
                                                         </tr>
-                                                    </c:forEach>
-                                                    <tr>
-                                                        <th scope="row"></th>
-                                                        <td class="py-5"></td>
-                                                        <td class="py-5"></td>
-                                                        <td class="py-5">
-                                                            <p class="mb-0 text-dark py-3">Tổng tiền</p>
-                                                        </td>
-                                                        <td class="py-5">
-                                                            <div class="py-3 border-bottom border-top">
-                                                                <p class="mb-0 cart-total-accent" id="totalPrice"
-                                                                    data-cart-total-price="true">
-                                                                    <fmt:formatNumber type="number"
-                                                                        value="${totalPrice}" /> đ
-                                                                </p>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                        <!-- Phương thức thanh toán -->
-                                        <div class="row g-4 text-center align-items-center justify-content-center pt-4">
-                                            <h4 class="mb-4">Phương thức thanh toán</h4>
-
-                                            <div class="form-check text-start">
-                                                <input type="radio" class="form-check-input bg-primary border-0"
-                                                    id="paymentCOD" name="paymentMethod" value="COD" checked>
-                                                <label class="form-check-label" for="paymentCOD">
-                                                    Thanh toán khi nhận hàng (COD)
-                                                </label>
+                                                    </tbody>
+                                                </table>
                                             </div>
 
-                                            <div class="form-check text-start">
-                                                <input type="radio" class="form-check-input bg-primary border-0"
-                                                    id="paymentVNPay" name="paymentMethod" value="VNPAY">
-                                                <label class="form-check-label" for="paymentVNPay">
-                                                    Thanh toán qua VNPay
-                                                    <img src="../client/img/vnpay-logo.png"
-                                                        style="height: 25px;" alt="VNPay">
-                                                </label>
-                                            </div>
+                                            <!-- Phương thức thanh toán -->
+                                            <div class="checkout-payment">
+                                                <p class="checkout-payment__title">Phương thức thanh toán</p>
 
-                                            <button type="submit"
-                                                class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4"
-                                                style="width: 100%;">
-                                                Đặt hàng
-                                            </button>
+                                                <div class="payment-option">
+                                                    <input type="radio" class="payment-option__input" id="paymentCOD"
+                                                        name="paymentMethod" value="COD" checked>
+                                                    <label class="payment-option__label" for="paymentCOD">
+                                                        <span class="payment-option__icon">
+                                                            <i class="fas fa-truck-moving"></i>
+                                                        </span>
+                                                        <span class="payment-option__content">
+                                                            <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                                            <small>Kiểm tra sản phẩm trước khi thanh toán.</small>
+                                                        </span>
+                                                    </label>
+                                                </div>
+
+                                                <div class="payment-option">
+                                                    <input type="radio" class="payment-option__input" id="paymentVNPay"
+                                                        name="paymentMethod" value="VNPAY">
+                                                    <label class="payment-option__label" for="paymentVNPay">
+                                                        <span class="payment-option__icon payment-option__icon--accent">
+                                                            <img src="/client/img/vnpay-logo.png" alt="VNPay"
+                                                                class="payment-option__logo">
+                                                        </span>
+                                                        <span class="payment-option__content">
+                                                            <strong>Thanh toán qua VNPay</strong>
+                                                            <small>Giao dịch bảo mật, xác nhận tức thì.</small>
+                                                        </span>
+                                                    </label>
+                                                </div>
+
+                                                <button type="submit"
+                                                    class="btn checkout-submit-btn w-100 text-uppercase">
+                                                    Đặt hàng
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -4,6 +4,14 @@
 (function () {
   const filterBtn = document.getElementById("btnFilter");
   const productsContainer = document.getElementById("productsContainer");
+  const listingRow = productsContainer
+    ? productsContainer.closest(".fruite")
+    : null;
+  let productCardObserver = null;
+
+  decorateProductListing(listingRow, productsContainer);
+  hookFilterOptionStates();
+  refreshProductCardAnimations();
 
   if (!filterBtn || !productsContainer) {
     return;
@@ -69,7 +77,9 @@
       <div class="col-md-6 col-lg-4 product-item">
         <div class="rounded position-relative fruite-item">
           <div class="fruite-img">
-            <img src="/images/product/${product.image || ""}" class="img-fluid w-100 rounded-top" alt="">
+            <img src="/images/product/${
+              product.image || ""
+            }" class="img-fluid w-100 rounded-top" alt="">
           </div>
           <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">
             Sản phẩm
@@ -90,7 +100,9 @@
               <p style="font-size: 15px; text-align: center; width: 100%;" class="text-dark fw-bold mb-3">
                 ${formattedPrice} đ
               </p>
-              <form action="/add-product-to-cart/${product.id || 0}" method="post">
+              <form action="/add-product-to-cart/${
+                product.id || 0
+              }" method="post">
                 ${csrfInputHtml}
                 <button class="mx-auto btn border border-secondary rounded-pill px-3 text-primary" type="submit">
                   <i class="fa fa-shopping-bag me-2 text-primary"></i>
@@ -123,6 +135,8 @@
     productsContainer.innerHTML = products
       .map((product) => createProductCard(product))
       .join("");
+
+    refreshProductCardAnimations();
   }
 
   async function requestFilteredProducts() {
@@ -145,8 +159,7 @@
       filterBtn.textContent = "Đang lọc...";
       filterBtn.disabled = true;
     } else {
-      filterBtn.textContent =
-        filterBtn.dataset.originalText || "Lọc Sản Phẩm";
+      filterBtn.textContent = filterBtn.dataset.originalText || "Lọc Sản Phẩm";
       filterBtn.disabled = false;
     }
   }
@@ -164,4 +177,91 @@
       setLoadingState(false);
     }
   });
+
+  function decorateProductListing(row, container) {
+    if (document.body) {
+      document.body.classList.add("page-product-list");
+    }
+
+    if (container) {
+      container.classList.add("product-grid-animated");
+    }
+
+    if (!row) {
+      return;
+    }
+
+    row.classList.add("product-grid-layout");
+
+    const filterColumn = row.querySelector(".col-12.col-md-4");
+    const gridColumn = row.querySelector(".col-12.col-md-8");
+
+    if (filterColumn) {
+      filterColumn.classList.add("product-filter-column");
+    }
+
+    if (gridColumn) {
+      gridColumn.classList.add("product-grid-column");
+    }
+  }
+
+  function hookFilterOptionStates() {
+    const optionInputs = document.querySelectorAll(".filter-option input");
+    optionInputs.forEach((input) => {
+      const wrapper = input.closest(".filter-option");
+      if (!wrapper) {
+        return;
+      }
+      const syncState = () => {
+        wrapper.classList.toggle("filter-option--active", input.checked);
+      };
+      syncState();
+      input.addEventListener("change", syncState);
+    });
+  }
+
+  function refreshProductCardAnimations() {
+    if (!productsContainer) {
+      return;
+    }
+
+    const cards = productsContainer.querySelectorAll(".product-item");
+    if (!cards.length) {
+      if (productCardObserver) {
+        productCardObserver.disconnect();
+      }
+      return;
+    }
+
+    const applyVisibleClass = (card, index) => {
+      card.style.setProperty("--card-delay", `${index * 70}ms`);
+      card.classList.add("product-card-visible");
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      cards.forEach(applyVisibleClass);
+      return;
+    }
+
+    if (productCardObserver) {
+      productCardObserver.disconnect();
+    }
+
+    productCardObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("product-card-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.18 }
+    );
+
+    cards.forEach((card, index) => {
+      card.style.setProperty("--card-delay", `${index * 70}ms`);
+      productCardObserver.observe(card);
+    });
+  }
 })();

@@ -4,11 +4,23 @@ $(document).ready(function () {
   const SELECTION_STORAGE_KEY = "furniture_store_cart_selection";
   let selectionStateMap = null;
 
-  // Currency formatter for VNĐ
+  const currencyFormatter =
+    typeof Intl !== "undefined" && Intl.NumberFormat
+      ? new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 })
+      : null;
+
+  // Currency formatter for VND
   function formatCurrency(number) {
     const amount = Number(number);
     const safeAmount = Number.isFinite(amount) ? amount : 0;
-    return safeAmount.toLocaleString("vi-VN") + " đ";
+    if (currencyFormatter) {
+      return `${currencyFormatter.format(safeAmount)} đ`;
+    }
+    const fallback =
+      typeof safeAmount.toLocaleString === "function"
+        ? safeAmount.toLocaleString("vi-VN")
+        : String(safeAmount);
+    return `${fallback} đ`;
   }
 
   function parsePrice(raw) {
@@ -17,20 +29,20 @@ $(document).ready(function () {
     }
     if (raw === null || typeof raw === "undefined") return 0;
 
-    let normalized = String(raw).trim();
+    const normalized = String(raw).trim();
+    if (!normalized) return 0;
 
-    const decimalMatch = normalized.match(/([.,])(\d{1,2})$/);
-    if (decimalMatch) {
-      const integerPart = normalized
-        .slice(0, decimalMatch.index)
-        .replace(/[^\d-]/g, "");
-      normalized = `${integerPart}.${decimalMatch[2]}`;
-    } else {
-      normalized = normalized.replace(/[^\d-]/g, "");
+    // Keep digits, decimal separators, +/- signs and scientific notation markers.
+    const sanitized = normalized.replace(/[^0-9+.\-eE]/g, "");
+    const direct = Number(sanitized);
+    if (Number.isFinite(direct)) {
+      return direct;
     }
 
-    const numericPrice = parseFloat(normalized);
-    return Number.isFinite(numericPrice) ? numericPrice : 0;
+    // Fallback: strip everything except digits and minus sign (handles formatted strings)
+    const digitsOnly = normalized.replace(/[^\d-]/g, "");
+    const fallback = parseInt(digitsOnly, 10);
+    return Number.isFinite(fallback) ? fallback : 0;
   }
 
   function getSelectionMap() {
@@ -92,6 +104,22 @@ $(document).ready(function () {
     if (row.length) {
       row.toggleClass("cart-row--muted", !isSelected);
     }
+  }
+
+  function updateLineItemSubtotalDisplay(input, qty, highlight) {
+    if (!input || !input.length) return;
+    const pricePerItem = parsePrice(input.data("cart-detail-price")) || 0;
+    const cartDetailId = input.data("cart-detail-id");
+    const subtotal = Math.max(0, qty) * pricePerItem;
+    const priceCells = $(`p[data-cart-detail-id='${cartDetailId}']`);
+    if (priceCells.length) {
+      priceCells.text(formatCurrency(subtotal));
+      if (highlight) {
+        priceCells.addClass("highlight");
+        setTimeout(() => priceCells.removeClass("highlight"), 500);
+      }
+    }
+    updateCheckoutQuantityDisplay(cartDetailId, qty);
   }
 
   function syncSelectAllCheckboxState() {
@@ -221,6 +249,37 @@ $(document).ready(function () {
     }
   }
 
+  function refreshCartDisplayFromCurrentValues() {
+    const visibleInputs = $("input[data-cart-detail-id]");
+    if (visibleInputs.length) {
+      visibleInputs.each(function () {
+        const input = $(this);
+        const qty = parseInt(input.val(), 10) || 0;
+        updateLineItemSubtotalDisplay(input, qty);
+      });
+    } else {
+      const checkoutItems = $(
+        "[data-checkout-unit-price][data-cart-detail-id]"
+      );
+      checkoutItems.each(function () {
+        const unitPriceEl = $(this);
+        const cartDetailId = unitPriceEl.data("cart-detail-id");
+        const pricePerItem = getCheckoutUnitPrice(cartDetailId);
+        const qtyText = $(
+          `[data-checkout-quantity][data-cart-detail-id='${cartDetailId}']`
+        ).text();
+        const qty = parseInt(qtyText, 10) || 0;
+        if (pricePerItem) {
+          const subtotal = pricePerItem * qty;
+          $(`p[data-cart-detail-id='${cartDetailId}']`).text(
+            formatCurrency(subtotal)
+          );
+        }
+      });
+    }
+    updateTotal();
+  }
+
   function loadSavedQuantities() {
     try {
       const raw = localStorage.getItem(QUANTITY_STORAGE_KEY);
@@ -263,22 +322,18 @@ $(document).ready(function () {
       if (!isFinite(qty)) return;
 
       const visibleInput = $(`input[data-cart-detail-id='${id}']`);
-      let pricePerItem = 0;
-
       if (visibleInput.length) {
         visibleInput.val(qty);
-        pricePerItem = parsePrice(visibleInput.data("cart-detail-price"));
         syncHiddenQuantity(visibleInput, qty);
+        updateLineItemSubtotalDisplay(visibleInput, qty);
       } else {
-        pricePerItem = getCheckoutUnitPrice(id);
+        const pricePerItem = getCheckoutUnitPrice(id);
+        if (pricePerItem) {
+          const totalForItem = pricePerItem * qty;
+          $(`p[data-cart-detail-id='${id}']`).text(formatCurrency(totalForItem));
+        }
+        updateCheckoutQuantityDisplay(id, qty);
       }
-
-      if (pricePerItem) {
-        const totalForItem = pricePerItem * qty;
-        $(`p[data-cart-detail-id='${id}']`).text(formatCurrency(totalForItem));
-      }
-
-      updateCheckoutQuantityDisplay(id, qty);
     });
     updateTotal();
   }
@@ -341,19 +396,9 @@ $(document).ready(function () {
       // Cập nhật input ẩn trong form checkout (tên sẽ là cartDetails[INDEX].quantity)
       syncHiddenQuantity(input, value);
 
-      const pricePerItem = parsePrice(input.data("cart-detail-price")) || 0;
-      const cartDetailId = input.data("cart-detail-id");
-
-      // Cập nhật lại thành tiền của sản phẩm (chỉ cập nhật thẻ p chứa giá)
-      const totalForItem = pricePerItem * value;
-      const itemPrice = $(`p[data-cart-detail-id='${cartDetailId}']`);
-      itemPrice.text(formatCurrency(totalForItem)).addClass("highlight");
-      setTimeout(() => itemPrice.removeClass("highlight"), 500);
-
-      updateCheckoutQuantityDisplay(cartDetailId, value);
-
+      updateLineItemSubtotalDisplay(input, value, true);
       // Lưu số lượng mới
-      saveQuantity(cartDetailId, value);
+      saveQuantity(input.data("cart-detail-id"), value);
 
       updateTotal();
     });
@@ -371,18 +416,9 @@ $(document).ready(function () {
         // Cập nhật input ẩn trong form checkout
         syncHiddenQuantity(input, value);
 
-        const pricePerItem = parsePrice(input.data("cart-detail-price")) || 0;
-        const cartDetailId = input.data("cart-detail-id");
-        const totalForItem = pricePerItem * value;
-
-        $(`p[data-cart-detail-id='${cartDetailId}']`).text(
-          formatCurrency(totalForItem)
-        );
-
-        updateCheckoutQuantityDisplay(cartDetailId, value);
-
+        updateLineItemSubtotalDisplay(input, value);
         // Lưu số lượng mới
-        saveQuantity(cartDetailId, value);
+        saveQuantity(input.data("cart-detail-id"), value);
 
         updateTotal();
       }
@@ -391,6 +427,7 @@ $(document).ready(function () {
   // Áp dụng các trạng thái đã lưu ngay khi trang load xong
   applySavedSelections();
   applySavedQuantities();
+  refreshCartDisplayFromCurrentValues();
   bindSelectionEvents();
 
   // Khi submit checkout form, xóa localStorage (vì server sẽ xử lý theo dữ liệu server side)
