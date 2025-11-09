@@ -32,80 +32,13 @@
                     <link href="/client/css/override.css" rel="stylesheet">
                     <link href="/client/css/effects.css" rel="stylesheet">
                     <link href="/client/css/order.css" rel="stylesheet">
+                    <link href="/client/css/product_detail.css" rel="stylesheet">
                     
                     <style>
                         .page-link.disabled {
                             color: var(--bs-pagination-disabled-color);
                             pointer-events: none;
                             background-color: var(--bs-pagination-disabled-bg);
-                        }
-                    </style>
-                    <style>
-                        .search-container {
-                            max-width: 500px;
-                            margin: 20px auto;
-                            padding: 20px;
-                        }
-                    
-                        #searchInput {
-                            padding: 10px 15px;
-                            border-radius: 25px;
-                            border: 1px solid #ddd;
-                            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-                            transition: all 0.3s ease;
-                            width: 100%;
-                            font-size: 16px;
-                        }
-                    
-                        #searchInput:focus {
-                            outline: none;
-                            border-color: #007bff;
-                            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.2);
-                        }
-                    
-                        .product-item {
-                            transition: opacity 0.3s ease;
-                        }
-                    
-                        .product-item.hidden {
-                            display: none !important;
-                        }
-                    </style>
-                    <style>
-                        .search-container {
-                            max-width: 500px;
-                            margin: 20px auto;
-                            padding: 20px;
-                        }
-                    
-                        #searchInput {
-                            padding: 10px 15px;
-                            border-radius: 25px;
-                            border: 1px solid #ddd;
-                            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-                            transition: all 0.3s ease;
-                            width: 100%;
-                            font-size: 16px;
-                        }
-                    
-                        #searchInput:focus {
-                            outline: none;
-                            border-color: #007bff;
-                            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.2);
-                        }
-                    
-                        .product-item {
-                            transition: opacity 0.3s ease;
-                        }
-                    
-                        .product-item.hidden {
-                            display: none !important;
-                        }
-                    
-                        .no-results {
-                            text-align: center;
-                            padding: 40px 20px;
-                            color: #666;
                         }
                     </style>
                 </head>
@@ -140,7 +73,7 @@
                                         <div class="row g-4">
 
                                             <!-- factoryFilter -->
-                                            <div class="col-12" id="factoryFilter">
+                                            <div class="col-12 filter-section" id="factoryFilter">
                                                 <div class="mb-2"><b>Hãng sản xuất</b></div>
 
                                                 <div class="form-check form-check-inline">
@@ -165,67 +98,67 @@
                                             <!--  -->
 
                                             <!-- targetFilter -->
-                                            <div class="col-12" id="targetFilter">
+                                            <div class="col-12 filter-section" id="targetFilter">
                                                 <div class="mb-2"><b>Phân loại</b></div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="target-1"
-                                                        value="GAMING">
-                                                    <label class="form-check-label" for="target-1">Ghế</label>
+                                                <div class="filter-grid filter-grid--target">
+                                                    <label class="filter-option" for="target-1">
+                                                        <input class="form-check-input" type="checkbox" id="target-1"
+                                                            value="GAMING">
+                                                        <span>Ghế</span>
+                                                    </label>
+                                                    <label class="filter-option" for="target-2">
+                                                        <input class="form-check-input" type="checkbox" id="target-2"
+                                                            value="SINHVIEN-VANPHONG">
+                                                        <span>Bàn</span>
+                                                    </label>
+                                                    <label class="filter-option" for="target-3">
+                                                        <input class="form-check-input" type="checkbox" id="target-3"
+                                                            value="THIET-KE-DO-HOA">
+                                                        <span>Giường</span>
+                                                    </label>
+                                                    <label class="filter-option" for="target-4">
+                                                        <input class="form-check-input" type="checkbox" id="target-4"
+                                                            value="MONG-NHE">
+                                                        <span>Tủ</span>
+                                                    </label>
+                                                    <label class="filter-option" for="target-5">
+                                                        <input class="form-check-input" type="checkbox" id="target-5"
+                                                            value="DOANH-NHAN">
+                                                        <span>Kệ</span>
+                                                    </label>
+                                                    <label class="filter-option" for="target-6">
+                                                        <input class="form-check-input" type="checkbox" id="target-6"
+                                                            value="KHAC">
+                                                        <span>Khác</span>
+                                                    </label>
                                                 </div>
-
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="target-2"
-                                                        value="SINHVIEN-VANPHONG">
-                                                    <label class="form-check-label" for="target-2">Bàn</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="target-3"
-                                                        value="THIET-KE-DO-HOA">
-                                                    <label class="form-check-label" for="target-3">Bộ PC</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="target-4"
-                                                        value="MONG-NHE">
-                                                    <label class="form-check-label" for="target-4">Tủ</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="target-5"
-                                                        value="DOANH-NHAN">
-                                                    <label class="form-check-label" for="target-5">Kệ</label>
-                                                </div>
-
-
                                             </div>
                                             <!--  -->
 
                                             <!-- priceFilter -->
-                                            <div class="col-12" id="priceFilter">
+                                            <div class="col-12 filter-section" id="priceFilter">
                                                 <div class="mb-2"><b>Mức giá</b></div>
-
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="price-2"
-                                                        value="duoi-10-trieu">
-                                                    <label class="form-check-label" for="price-2">Dưới 10 triệu</label>
-                                                </div>
-
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="price-3"
-                                                        value="10-15-trieu">
-                                                    <label class="form-check-label" for="price-3">Từ 10 - 15
-                                                        triệu</label>
-                                                </div>
-
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="price-4"
-                                                        value="15-20-trieu">
-                                                    <label class="form-check-label" for="price-4">Từ 15 - 20
-                                                        triệu</label>
-                                                </div>
-
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="price-5"
-                                                        value="tren-20-trieu">
-                                                    <label class="form-check-label" for="price-5">Trên 20 triệu</label>
+                                                <div class="filter-grid filter-grid--price">
+                                                    <label class="filter-option" for="price-2">
+                                                        <input class="form-check-input" type="checkbox" id="price-2"
+                                                            value="duoi-10-trieu">
+                                                        <span>Dưới 10 triệu</span>
+                                                    </label>
+                                                    <label class="filter-option" for="price-3">
+                                                        <input class="form-check-input" type="checkbox" id="price-3"
+                                                            value="10-15-trieu">
+                                                        <span>Từ 10 - 15 triệu</span>
+                                                    </label>
+                                                    <label class="filter-option" for="price-4">
+                                                        <input class="form-check-input" type="checkbox" id="price-4"
+                                                            value="15-20-trieu">
+                                                        <span>Từ 15 - 20 triệu</span>
+                                                    </label>
+                                                    <label class="filter-option" for="price-5">
+                                                        <input class="form-check-input" type="checkbox" id="price-5"
+                                                            value="tren-20-trieu">
+                                                        <span>Trên 20 triệu</span>
+                                                    </label>
                                                 </div>
                                             </div>
                                             <!--  -->
@@ -267,8 +200,8 @@
                                     <!-- bên phải -->
                                     <div class="col-12 col-md-8 text-center">
                                         <!-- Search -->
-                                        <div class="search-container">
-                                            <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                                        <div class="filter-search">
+                                            <input type="text" id="searchInput" class="form-control filter-search__input" placeholder="Tìm kiếm sản phẩm...">
                                         </div>
                                         <!-- Products -->
                                         <div class="row g-4" id="productsContainer">
@@ -361,6 +294,7 @@
                     <script src="/client/js/effects.js"></script>
                     <script src="/client/js/cart_fly.js"></script>
                     <script src="/client/js/product_detail.js"></script>
+                    <script src="/client/js/product_filter.js"></script>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                             const searchInput = document.getElementById('searchInput');

@@ -245,6 +245,7 @@ uri="http://www.springframework.org/tags/form" %>
     <script src="/client/js/effects.js"></script>
     <script src="/client/js/cart_fly.js"></script>
     <script src="/client/js/product_detail.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
   </body>
 </html>

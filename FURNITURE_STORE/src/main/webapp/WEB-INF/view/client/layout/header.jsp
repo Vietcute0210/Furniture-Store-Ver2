@@ -1,69 +1,80 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
-    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-        <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-            <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<div class="container-fluid fixed-top">
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
+<link rel="stylesheet" href="/client/css/header_cart.css" />
+<div class="container-fluid fixed-top header-shell">
     <div class="container px-0">
-        <nav class="navbar navbar-light bg-white navbar-expand-xl">
-            <a href="/" class="navbar-brand">
-                <h1 class="text-primary display-6">FURNITURE STORE</h1>
-            </a>
-            <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarCollapse">
-                <span class="fa fa-bars text-primary"></span>
-            </button>            
-            <div class="collapse navbar-collapse bg-white justify-content-between mx-5" id="navbarCollapse">
-                <div class="navbar-nav">
-                    <a href="/" class="nav-item nav-link active">Trang Chủ</a>
-                    <a href="/products" class="nav-item nav-link">Sản Phẩm</a>
+        <nav class="navbar navbar-expand-xl header-navbar">
+            <a href="/" class="navbar-brand header-brand d-flex align-items-center">
+                <div class="header-brand__logo">FS</div>
+                <div class="header-brand__text ms-2">
+                    <span class="header-brand__title d-block">Furniture Store</span>
+                    <small class="header-brand__subtitle text-uppercase">Living Inspiration</small>
                 </div>
-                <div class="d-flex m-3 me-0">
-                    <!-- Nếu đã đăng nhập -->
+            </a>
+            <button class="navbar-toggler header-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="fa fa-bars"></span>
+            </button>
+            <div class="collapse navbar-collapse header-navbar__collapse" id="navbarCollapse">
+                <div class="navbar-nav header-nav ms-lg-4">
+                    <a href="/" class="nav-item nav-link active">Trang Chủ</a>
+                    <a href="/products" class="nav-item nav-link">Sản phẩm</a>
+                </div>
+                <div class="header-actions d-flex align-items-center ms-auto">
                     <c:if test="${not empty pageContext.request.userPrincipal}">
-                        <a href="/cart" class="position-relative me-4 my-auto">
-                            <i class="fa fa-shopping-bag fa-2x"></i>
-                            <span
-                                class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
-                                style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
-                                ${sessionScope.sum}
-                            </span>
-                        </a>
-                        <div class="dropdown my-auto">
-                            <a href="#" class="dropdown" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user fa-2x"></i>
-                            </a>
-                        
-                            <ul class="dropdown-menu dropdown-menu-end p-4" aria-labelledby="dropdownMenuLink">
-                                <li class="d-flex align-items-center flex-column" style="min-width: 300px;">
-                                    <img style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden;"
-                                        src="/images/avatar/${sessionScope.avatar}" />
-                                    <div class="text-center my-3">
-                                        <c:out value="${sessionScope.fullName1}" />
-                                    </div>
-                                </li>
-                            
-                                <% if (session.getAttribute("role") !=null && session.getAttribute("role").equals("ADMIN")) { %>
-                                <li><a class="dropdown-item" href="/admin">Trang quản trị</a></li>
-                                <% } %>
-                                <li><a class="dropdown-item" href="/view-profile">Cập nhật thông tin cá nhân</a></li>
-                                <li><a class="dropdown-item" href="/order-history">Lịch sử mua hàng</a></li>
-                                <li><a class="dropdown-item" href="/change-password">Đổi mật khẩu</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <form method="post" action="/logout">
+                        <c:set var="cartSum" value="${sessionScope.sum != null ? sessionScope.sum : 0}" />
+                        <div class="header-cart" data-mini-cart data-fetch-url="/api/cart/preview">
+                            <button type="button" class="header-icon header-cart__btn" data-mini-cart-trigger
+                                aria-haspopup="true" aria-expanded="false" aria-label="Giỏ hàng">
+                                <i class="fa fa-shopping-bag"></i>
+                                <span class="header-badge" data-mini-cart-count>${cartSum}</span>
+                            </button>
+                            <div class="mini-cart-panel" data-mini-cart-panel>
+                                <div class="mini-cart-panel__head">
+                                    <span>Sản phẩm mới thêm</span>
+                                    <span class="mini-cart-panel__total" data-mini-cart-total></span>
+                                </div>
+                                <div class="mini-cart-panel__body" data-mini-cart-body>
+                                    <p class="mini-cart-panel__empty">Chưa có sản phẩm trong giỏ hàng</p>
+                                </div>
+                                <div class="mini-cart-panel__footer">
+                                    <a href="/cart" class="btn btn-primary w-100 btn-sm">Xem giỏ hàng</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="header-user ms-3" data-user-menu>
+                            <button type="button" class="header-icon header-user__btn" data-user-trigger
+                                aria-haspopup="true" aria-expanded="false" aria-label="Tài khoản">
+                                <i class="fas fa-user"></i>
+                            </button>
+                            <div class="header-user__panel" data-user-panel>
+                                <div class="header-user__avatar">
+                                    <img src="/images/avatar/${sessionScope.avatar}" alt="avatar người dùng" />
+                                </div>
+                                <div class="header-user__name">
+                                    <c:out value="${sessionScope.fullName1}" />
+                                </div>
+                                <div class="header-user__links">
+                                    <% if (session.getAttribute("role") != null && session.getAttribute("role").equals("ADMIN")) { %>
+                                    <a class="header-user__link" href="/admin">Trang quản trị</a>
+                                    <% } %>
+                                    <a class="header-user__link" href="/view-profile">Cập nhật thông tin cá nhân</a>
+                                    <a class="header-user__link" href="/order-history">Lịch sử mua hàng</a>
+                                    <a class="header-user__link" href="/change-password">Đổi mật khẩu</a>
+                                    <form method="post" action="/logout" class="header-user__logout">
                                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                                        <button class="dropdown-item">Đăng xuất</button>
-                                    </form>                        
-                                </li>
-                            </ul>
+                                        <button type="submit">Đăng xuất</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </c:if>
-                    <!-- Nếu chưa đăng nhập -->
                     <c:if test="${empty pageContext.request.userPrincipal}">
-                        <a href="/login" class="a-login position-relative me-4 my-auto">
+                        <a href="/login" class="btn btn-outline-primary header-login-btn">
                             Đăng nhập
                         </a>
                     </c:if>
@@ -72,3 +83,5 @@
         </nav>
     </div>
 </div>
+
+<script defer src="/client/js/header_cart.js"></script>

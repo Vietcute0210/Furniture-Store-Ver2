@@ -127,6 +127,40 @@ public class ItemController {
         return "redirect:/checkout";
     }
 
+    //=====================sửa thêm start==========================
+
+    @GetMapping("/products/filter-data")
+    public ResponseEntity<?> filterProducts(
+            @RequestParam(value = "factories", required = false) List<String> factories,
+            @RequestParam(value = "targets", required = false) List<String> targets,
+            @RequestParam(value = "prices", required = false) List<String> prices,
+            @RequestParam(value = "sort", required = false, defaultValue = "gia-nothing") String sortMode) {
+        try {
+            List<Product> products = productService.filterProducts(factories, targets, prices, sortMode);
+            List<Map<String, Object>> result = products.stream().map(p -> {
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("id", p.getId());
+                map.put("name", p.getName());
+                map.put("image", p.getImage());
+                map.put("price", p.getPrice());
+                map.put("shortDesc", p.getShortDesc());
+                map.put("factory", p.getFactory());
+                map.put("target", p.getTarget());
+
+                Integer stockQuantity = warehouseService.getStockQuantity(p.getId());
+                map.put("stockQuantity", stockQuantity != null ? stockQuantity : 0);
+                return map;
+            }).collect(java.util.stream.Collectors.toList());
+
+            return ResponseEntity.ok(result);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.ok(new java.util.ArrayList<>());
+        }
+    }
+
+    //=====================sửa thêm end==========================
+
     @GetMapping("/search")
     public ResponseEntity<?> searchProducts(@RequestParam("keyword") String keyword) {
         try {
