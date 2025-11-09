@@ -44,6 +44,7 @@ public class ItemController {
     public String getProductPage(Model model, @PathVariable long id) {
         Product product = this.productService.getProductById(id);
         model.addAttribute("product", product);
+        model.addAttribute("recommendations", this.productService.getRecommendedProducts(product, 4));
         return "client/product/detail";
     }
 

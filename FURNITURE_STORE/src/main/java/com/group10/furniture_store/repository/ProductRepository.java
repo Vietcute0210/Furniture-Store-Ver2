@@ -25,4 +25,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY p.id DESC")
     // List<Product> searchByKeyword(@Param("keyword") String keyword);
     List<Product> findByNameContainingIgnoreCaseOrderByIdDesc(String name);
+
+    List<Product> findTop4ByTargetIgnoreCaseAndIdNotOrderBySoldDesc(String target, long id);
+
+    List<Product> findTop4ByIdNotOrderBySoldDesc(long id);
 }

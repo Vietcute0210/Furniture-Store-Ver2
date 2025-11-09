@@ -39,7 +39,7 @@ uri="http://www.springframework.org/tags/form" %>
     <link href="/client/css/override.css" rel="stylesheet" />
     <link href="/client/css/effects.css" rel="stylesheet" />
     <link href="/client/css/order.css" rel="stylesheet" />
-    <!-- <link href="/client/css/product_detail.css" rel="stylesheet" /> -->
+    <link href="/client/css/product_detail.css" rel="stylesheet" />
     <meta name="_csrf" content="${_csrf.token}" />
     <meta name="_csrf_header" content="${_csrf.headerName}" />
 
@@ -72,17 +72,92 @@ uri="http://www.springframework.org/tags/form" %>
               </ol>
             </nav>
           </div>
-          <div class="col-lg-8 col-xl-9">
+          <div class="col-lg-9 col-xl-9">
             <div class="row g-4">
               <div class="col-lg-6">
-                <div class="border rounded">
-                  <a href="#">
+                <div
+                  class="product-media-gallery fade-up"
+                  data-autoplay="true"
+                  data-interval="2000"
+                >
+                  <button
+                    class="gallery-nav gallery-nav--prev"
+                    type="button"
+                    aria-label="Xem nội dung trước"
+                  >
+                    <i class="fa fa-chevron-left"></i>
+                  </button>
+                  <div class="product-media-viewer">
                     <img
                       src="/images/product/${product.image}"
-                      class="img-fluid rounded"
-                      alt="Image"
+                      class="product-media-viewer__image"
+                      alt="${product.name}"
                     />
-                  </a>
+                    <video
+                      class="product-media-viewer__video"
+                      muted
+                      playsinline
+                      loop
+                      controls
+                    ></video>
+                  </div>
+                  <button
+                    class="gallery-nav gallery-nav--next"
+                    type="button"
+                    aria-label="Xem nội dung kế tiếp"
+                  >
+                    <i class="fa fa-chevron-right"></i>
+                  </button>
+                  <div class="product-media-thumbs">
+                    <button
+                      class="media-thumb active"
+                      type="button"
+                      data-media-type="image"
+                      data-media-src="/images/product/${product.image}"
+                      aria-label="Ảnh chính"
+                    >
+                      <img src="/images/product/${product.image}" alt="${product.name}" />
+                    </button>
+                    <button
+                      class="media-thumb"
+                      type="button"
+                      data-media-type="image"
+                      data-media-src="/client/img/anh1.jpg"
+                      aria-label="Góc chụp 01"
+                    >
+                      <img src="/client/img/anh1.jpg" alt="Góc chụp phụ 1" />
+                    </button>
+                    <button
+                      class="media-thumb"
+                      type="button"
+                      data-media-type="image"
+                      data-media-src="/client/img/anh2.webp"
+                      aria-label="Góc chụp 02"
+                    >
+                      <img src="/client/img/anh2.webp" alt="Góc chụp phụ 2" />
+                    </button>
+                    <button
+                      class="media-thumb"
+                      type="button"
+                      data-media-type="image"
+                      data-media-src="/client/img/anh3.jpg"
+                      aria-label="Góc chụp 03"
+                    >
+                      <img src="/client/img/anh3.jpg" alt="Góc chụp phụ 3" />
+                    </button>
+                    <button
+                      class="media-thumb media-thumb--video"
+                      type="button"
+                      data-media-type="video"
+                      data-media-src="https://www.w3schools.com/html/mov_bbb.mp4"
+                      aria-label="Video demo"
+                    >
+                      <span class="media-thumb__video-icon">
+                        <i class="fa fa-play"></i>
+                      </span>
+                      <small>Video demo</small>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="col-lg-6">
@@ -179,47 +254,124 @@ uri="http://www.springframework.org/tags/form" %>
               </div>
             </div>
           </div>
-          <div class="col-lg-4 col-xl-3">
-            <div class="row g-4 fruite">
-              <div class="col-lg-12">
-                <div class="mb-4">
-                  <h4>Categories</h4>
-                  <ul class="list-unstyled fruite-categorie">
-                    <li>
-                      <div class="d-flex justify-content-between fruite-name">
-                        <a href="#"
-                          ><i class="fas fa-apple-alt me-2"></i>Bộ PC</a
-                        >
-                        <span>(3)</span>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="d-flex justify-content-between fruite-name">
-                        <a href="#"><i class="fas fa-apple-alt me-2"></i>Bàn</a>
-                        <span>(5)</span>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="d-flex justify-content-between fruite-name">
-                        <a href="#"><i class="fas fa-apple-alt me-2"></i>Ghế</a>
-                        <span>(2)</span>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="d-flex justify-content-between fruite-name">
-                        <a href="#"><i class="fas fa-apple-alt me-2"></i>Tủ</a>
-                        <span>(8)</span>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="d-flex justify-content-between fruite-name">
-                        <a href="#"><i class="fas fa-apple-alt me-2"></i>Kệ</a>
-                        <span>(5)</span>
-                      </div>
-                    </li>
-                  </ul>
+          <div class="col-lg-3 col-xl-3">
+            <aside class="recommended-sidebar fade-up mt-4 mt-lg-0">
+              <div class="recommended-sidebar__card">
+                <p class="recommended-sidebar__tag">
+                  <i class="fa fa-gift"></i>
+                  Ưu đãi độc quyền
+                </p>
+                <ul class="recommended-sidebar__list">
+                  <li>Voucher 50K cho đơn từ 499K</li>
+                  <li>Freeship nội thành trong 24h</li>
+                  <li>Giảm thêm 5% khi mua combo</li>
+                </ul>
+                <button class="recommended-sidebar__btn">
+                  Lấy mã ưu đãi
+                </button>
+              </div>
+              <div class="recommended-sidebar__card">
+                <p class="recommended-sidebar__title">
+                  <i class="fa fa-store"></i>
+                  Thông tin shop
+                </p>
+                <div class="recommended-sidebar__meta">
+                  <span>
+                    Nhà cung cấp:
+                    <b>
+                      <c:out
+                        value="${empty product.factory ? 'FURNITURE STORE' : product.factory}"
+                      />
+                    </b>
+                  </span>
+                  <span>Đã bán: ${product.sold}+</span>
+                  <span>Đánh giá: 4.9/5 (1.2k+ lượt)</span>
+                </div>
+                <div class="recommended-sidebar__policies">
+                  <span><i class="fa fa-shield-alt"></i> Bảo hành 12 tháng</span>
+                  <span><i class="fa fa-undo"></i> Đổi trả trong 7 ngày</span>
+                  <span><i class="fa fa-headset"></i> Tư vấn 24/7</span>
                 </div>
               </div>
+              <div class="recommended-sidebar__card recommended-sidebar__card--highlight">
+                <p>Liên hệ ngay để được tư vấn miễn phí:</p>
+                <a href="tel:0123456789" class="recommended-sidebar__hotline">
+                  <i class="fa fa-phone"></i>
+                  0123 456 789
+                </a>
+                <small>Hoặc chat với shop để nhận báo giá nhanh.</small>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <div class="recommended-products fade-up mt-4 mt-lg-5">
+              <div class="recommended-products__header">
+                <p class="recommended-products__eyebrow">
+                  Sản phẩm khác của shop
+                </p>
+                <div class="recommended-products__title">
+                  <h4>Gợi ý dành riêng cho bạn</h4>
+                  <span>Chia sẻ vài món cùng danh mục/giá</span>
+                </div>
+              </div>
+              <c:choose>
+                <c:when test="${not empty recommendations}">
+                  <div class="recommended-grid">
+                    <c:forEach var="item" items="${recommendations}">
+                      <a
+                        class="recommended-card"
+                        href="/product/${item.id}"
+                        aria-label="${item.name}"
+                      >
+                        <div class="recommended-card__media">
+                          <img
+                            src="/images/product/${item.image}"
+                            alt="${item.name}"
+                          />
+                          <span class="recommended-card__tag">Gợi ý</span>
+                          <span class="recommended-card__rating">
+                            <i class="fa fa-star"></i>
+                            4.9
+                          </span>
+                        </div>
+                        <div class="recommended-card__body">
+                          <p class="recommended-card__name">
+                            ${item.name}
+                          </p>
+                          <p class="recommended-card__factory">
+                            ${item.factory}
+                          </p>
+                          <p class="recommended-card__price">
+                            <fmt:formatNumber
+                              type="number"
+                              value="${item.price}"
+                            />
+                            đ
+                          </p>
+                          <div class="recommended-card__meta">
+                            <span>Đã bán ${item.sold}+ </span>
+                            <span class="dot"></span>
+                            <span>
+                              <c:out
+                                value="${empty item.target ? 'Sản phẩm hot' : item.target}"
+                              />
+                            </span>
+                          </div>
+                        </div>
+                      </a>
+                    </c:forEach>
+                  </div>
+                </c:when>
+                <c:otherwise>
+                  <div class="recommended-empty">
+                    <i class="fa fa-store"></i>
+                    <p>Shop đang chuẩn bị thêm gợi ý cho sản phẩm này.</p>
+                    <span>Quay lại sau để xem thêm nhé!</span>
+                  </div>
+                </c:otherwise>
+              </c:choose>
             </div>
           </div>
         </div>

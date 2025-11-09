@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,30 @@ public class ProductService {
         Optional<Product> productOptional = this.productRepository.findById(id);
         Product product = productOptional.isPresent() ? productOptional.get() : null;
         return product;
+    }
+
+    public List<Product> getRecommendedProducts(Product product, int limit) {
+        if (product == null) {
+            return Collections.emptyList();
+        }
+
+        List<Product> prioritized = new ArrayList<>();
+        String target = product.getTarget();
+
+        if (target != null && !target.trim().isEmpty()) {
+            prioritized.addAll(this.productRepository
+                    .findTop4ByTargetIgnoreCaseAndIdNotOrderBySoldDesc(target, product.getId()));
+        }
+
+        List<Product> fallback = this.productRepository.findTop4ByIdNotOrderBySoldDesc(product.getId());
+
+        Map<Long, Product> uniqueById = new LinkedHashMap<>();
+        prioritized.forEach(item -> uniqueById.put(item.getId(), item));
+        fallback.forEach(item -> uniqueById.putIfAbsent(item.getId(), item));
+
+        return uniqueById.values().stream()
+                .limit(Math.max(0, limit))
+                .collect(Collectors.toList());
     }
 
     public void handleDeleteProduct(long id) {
