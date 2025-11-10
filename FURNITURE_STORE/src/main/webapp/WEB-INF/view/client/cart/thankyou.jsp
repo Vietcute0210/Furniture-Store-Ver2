@@ -39,7 +39,7 @@ uri="http://www.springframework.org/tags/form" %>
 
     <link rel="icon" type="image/png" href="/client/img/logo.png" />
   </head>
-  <body>
+  <body class="thankyou-page">
     <!-- Spinner -->
     <div
       id="spinner"
@@ -50,24 +50,74 @@ uri="http://www.springframework.org/tags/form" %>
 
     <jsp:include page="../layout/header.jsp" />
 
+    <c:set var="resolvedOrderId" value="${not empty param.orderId ? param.orderId : orderId}" />
+
     <!-- THANK YOU MAIN -->
-    <div class="thankyou-container container text-center">
-      <div class="thankyou-box">
+    <div class="thankyou-container container">
+      <div class="thankyou-box text-center">
         <div class="thankyou-icon">
           <i class="fas fa-check-circle"></i>
         </div>
         <h1 class="thankyou-title">Cảm ơn bạn đã đặt hàng!</h1>
         <p class="thankyou-message">
-          Đơn hàng của bạn đã được xác nhận thành công.
+          Đơn hàng của bạn đang được xử lý. Furniture Store sẽ thông báo ngay khi bàn giao cho đơn vị vận chuyển.
         </p>
-        <button
-          class="btn btn-primary rounded-pill px-5 py-3 mt-3 continue-btn"
-        >
-          Tiếp tục mua sắm
-        </button>
+        <c:if test="${not empty resolvedOrderId}">
+          <p class="thankyou-order-code">
+            Mã đơn hàng: <strong>#${resolvedOrderId}</strong>
+          </p>
+        </c:if>
+        <div class="thankyou-actions">
+          <a href="/products" class="btn btn-primary rounded-pill px-4 py-3 continue-btn">
+            Tiếp tục mua sắm
+          </a>
+          <a href="/order-history" class="btn btn-outline-primary rounded-pill px-4 py-3 thankyou-secondary-btn">
+            Theo dõi đơn hàng
+          </a>
+        </div>
+      </div>
+
+      <div class="thankyou-meta-grid">
+        <div class="thankyou-meta-card">
+          <div class="thankyou-meta-icon">
+            <i class="fas fa-box-open"></i>
+          </div>
+          <h3>Chuẩn bị đơn</h3>
+          <p>Đơn hàng sẽ được đóng gói trong vòng 24 giờ làm việc.</p>
+        </div>
+        <div class="thankyou-meta-card">
+          <div class="thankyou-meta-icon">
+            <i class="fas fa-truck-loading"></i>
+          </div>
+          <h3>Vận chuyển</h3>
+          <p>Thời gian giao hàng dự kiến 2-5 ngày tùy khu vực.</p>
+        </div>
+        <div class="thankyou-meta-card">
+          <div class="thankyou-meta-icon">
+            <i class="fas fa-headset"></i>
+          </div>
+          <h3>Hỗ trợ 24/7</h3>
+          <p>Hotline 1900 636 789 luôn sẵn sàng đồng hành cùng bạn.</p>
+        </div>
       </div>
     </div>
 
+    <section class="thankyou-extra-info container">
+      <div class="thankyou-extra-card">
+        <h4>Ưu đãi dành riêng</h4>
+        <p>
+          Truy cập mục khuyến mãi mỗi ngày để nhận voucher độc quyền cho các dòng sản phẩm mới.
+        </p>
+      </div>
+      <div class="thankyou-extra-card">
+        <h4>Liên hệ nhanh</h4>
+        <ul>
+          <li>Email: <a href="mailto:support@furniturestore.vn">support@furniturestore.vn</a></li>
+          <li>Hotline: <strong>1900 636 789</strong> (8:00 - 21:00)</li>
+          <li>Zalo CSKH: <strong>@furniturestore.vn</strong></li>
+        </ul>
+      </div>
+    </section>
     <jsp:include page="../layout/feature.jsp" />
     <jsp:include page="../layout/footer.jsp" />
 

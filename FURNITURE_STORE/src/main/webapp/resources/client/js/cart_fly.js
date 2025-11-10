@@ -36,6 +36,26 @@
       ) || el.closest("div,li,section,article");
     return root ? root.querySelector("img") : null;
   }
+  function resolveFormQuantity(form) {
+    if (!form) return 1;
+    const source =
+      form.querySelector('input[name="quantity"]') ||
+      form.querySelector("[data-cart-detail-index]");
+    if (!source) return 1;
+    const parsed = parseInt(source.value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  }
+  function applyQuantityToForm(form, quantity) {
+    if (!form) return;
+    const qtyInput = form.querySelector('input[name="quantity"]');
+    if (qtyInput) {
+      qtyInput.value = quantity;
+    }
+    const displayInput = form.querySelector("[data-cart-detail-index]");
+    if (displayInput) {
+      displayInput.value = quantity;
+    }
+  }
   function injectStyles() {
     if ($("#cart-fly-styles")) return;
     const css = `
@@ -52,12 +72,13 @@
     document.head.appendChild(s);
   }
 
-  function flyToCart(startEl, imgUrl, done) {
+  function flyToCart(startEl, imgUrl, quantity, done) {
     const cart = findCartIcon();
     if (!cart) {
       done && done();
       return;
     }
+    const added = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
     injectStyles();
 
     // create clone
@@ -136,11 +157,11 @@
         if (badge) {
           const n =
             parseInt((badge.textContent || "0").replace(/\D/g, "")) || 0;
-          badge.textContent = String(n + 1);
+          badge.textContent = String(n + added);
         } else {
           const plus = document.createElement("div");
           plus.className = "cart-plus-anim";
-          plus.textContent = "+1";
+          plus.textContent = `+${added}`;
           document.body.appendChild(plus);
           const rc = cart.getBoundingClientRect();
           plus.style.left = `${rc.left + rc.width / 2 - 18}px`;
@@ -173,11 +194,13 @@
     const img = nearestProductImage(btn);
     const src = img && (img.currentSrc || img.src);
     if (!src) return; // không có ảnh: để submit mặc định
+    const quantity = resolveFormQuantity(form);
 
     e.preventDefault();
-    flyToCart(img || btn, src, () =>
+    flyToCart(img || btn, src, quantity, () =>
       setTimeout(() => {
         try {
+          applyQuantityToForm(form, quantity);
           form.submit();
         } catch {}
       }, 60)

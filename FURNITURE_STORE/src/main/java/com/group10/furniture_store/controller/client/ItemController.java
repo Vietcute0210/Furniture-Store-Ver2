@@ -69,23 +69,57 @@ public class ItemController {
     }
 
     @PostMapping("/add-product-to-cart/{id}")
-    public String addProductToCart(Model model, @PathVariable long id, HttpServletRequest request) {
-        long productId = id;
-        HttpSession session = request.getSession();
-        String email = (String) session.getAttribute("email");
-        this.productService.handleAddProductToCart(email, productId, session, 1);
-        return "redirect:/";
+    public String addProductToCart(
+            @PathVariable long id,
+            @RequestParam(value = "quantity", required = false, defaultValue = "1") long quantity,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
+            HttpServletRequest request) {
+        return processAddProductToCart(id, quantity, redirectUrl, "/", request);
     }
 
     @PostMapping("/add-product-from-view-detail")
     public String handleAddProductFromViewDetail(
             @RequestParam("id") long id,
             @RequestParam("quantity") long quantity,
+            @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
+            HttpServletRequest request) {
+        return processAddProductToCart(id, quantity, redirectUrl, "/product/" + id, request);
+    }
+
+    private String processAddProductToCart(long productId, long quantity, String redirectUrl, String fallback,
             HttpServletRequest request) {
         HttpSession session = request.getSession();
         String email = (String) session.getAttribute("email");
-        this.productService.handleAddProductToCart(email, id, session, quantity);
-        return "redirect:/products/" + id;
+        long safeQuantity = quantity <= 0 ? 1 : quantity;
+        this.productService.handleAddProductToCart(email, productId, session, safeQuantity);
+        return "redirect:" + resolveRedirectTarget(redirectUrl, fallback, request.getContextPath());
+    }
+
+    private String resolveRedirectTarget(String redirectUrl, String fallback, String contextPath) {
+        if (redirectUrl == null) {
+            return fallback;
+        }
+        String trimmed = redirectUrl.trim();
+        if (trimmed.isEmpty()) {
+            return fallback;
+        }
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("//")) {
+            return fallback;
+        }
+        if (!trimmed.startsWith("/")) {
+            trimmed = "/" + trimmed;
+        }
+        if (contextPath != null && !contextPath.trim().isEmpty() && trimmed.startsWith(contextPath + "/")) {
+            trimmed = trimmed.substring(contextPath.length());
+            if (trimmed.isEmpty()) {
+                trimmed = "/";
+            }
+        }
+        if (trimmed.startsWith("/WEB-INF") || trimmed.startsWith("/META-INF")
+                || trimmed.startsWith("/add-product-to-cart")) {
+            return fallback;
+        }
+        return trimmed;
     }
 
     @GetMapping("/cart")
@@ -100,6 +134,11 @@ public class ItemController {
         if (cart != null) {
             session.setAttribute("cartId", cart.getId());
             session.setAttribute("sum", cart.getSum());
+            int distinctCount = cart.getCartDetails() == null ? 0
+                    : (int) cart.getCartDetails().stream().filter(java.util.Objects::nonNull).count();
+            session.setAttribute("cartItemCount", distinctCount);
+        } else {
+            session.setAttribute("cartItemCount", 0);
         }
         List<CartDetails> cartDetails = cart == null ? new ArrayList<>() : cart.getCartDetails();
 

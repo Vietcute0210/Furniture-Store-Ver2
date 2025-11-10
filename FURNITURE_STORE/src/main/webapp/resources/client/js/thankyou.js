@@ -83,8 +83,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // Nút quay về trang chủ
 const continueBtn = document.querySelector(".continue-btn");
 if (continueBtn) {
-  continueBtn.addEventListener("click", () => {
-    window.location.href = "/";
+  continueBtn.addEventListener("click", (event) => {
+    const targetHref = continueBtn.getAttribute("href") || "/";
+    if (continueBtn.tagName.toLowerCase() === "a") {
+      event.preventDefault();
+    }
+    window.location.href = targetHref;
   });
 }
 

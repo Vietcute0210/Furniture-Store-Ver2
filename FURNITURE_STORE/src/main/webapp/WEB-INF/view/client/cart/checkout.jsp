@@ -37,8 +37,9 @@
                     <div class="container-fluid py-5">
                         <div class="container py-5 checkout-section">
                             <h1 class="mb-4 checkout-page-title">Thanh toán đơn hàng</h1>
-                            <form action="/order/create" method="post" id="checkoutForm">
+                            <form action="/order/place-order" method="post" id="checkoutForm">
                                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                                <input type="hidden" name="totalPrice" value="${totalPrice}" data-cart-total-field />
 
                                 <div class="row g-5 align-items-start">
                                     <!-- Thông tin người nhận -->

@@ -1,4 +1,4 @@
-package com.group10.furniture_store.controller.client;
+﻿package com.group10.furniture_store.controller.client;
 
 import com.group10.furniture_store.domain.Cart;
 import com.group10.furniture_store.domain.CartDetails;
@@ -151,7 +151,9 @@ public class PaymentController {
     @GetMapping("/success")
     public String paymentSuccess(String orderId, Model model) {
         model.addAttribute("orderId", orderId);
-        return "client/cart/thankyou";
+        return orderId == null || orderId.isBlank()
+                ? "redirect:/thankyou"
+                : "redirect:/thankyou?orderId=" + orderId;
     }
 
     @GetMapping("/failed")

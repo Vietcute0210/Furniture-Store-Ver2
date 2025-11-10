@@ -1,4 +1,4 @@
-package com.group10.furniture_store.service;
+﻿package com.group10.furniture_store.service;
 
 //them thư viện
 import java.text.Normalizer;
@@ -105,6 +105,7 @@ public class ProductService {
     }
 
     public void handleAddProductToCart(String email, long productId, HttpSession session, long quantity) {
+        long safeQuantity = quantity <= 0 ? 1 : quantity;
         User user = this.userService.getUserByEmail(email);
         if (user != null) {
             // check user đã có Cart chưa ? Nếu chưa => Tạo mới
@@ -117,6 +118,7 @@ public class ProductService {
 
                 cart = this.cartRepository.save(otherCart);
             }
+            long currentSum = cart.getSum() == null ? 0L : cart.getSum();
 
             // save cart detail
             // tìm productById
@@ -136,27 +138,23 @@ public class ProductService {
                     cd.setCart(cart);
                     cd.setProduct(pr);
                     cd.setPrice(pr.getPrice());
-                    cd.setQuantity(quantity);
+                    cd.setQuantity(safeQuantity);
 
                     this.cartDetailsRepository.save(cd);
-
-                    // update cart(sum)
-                    Long newSum = cart.getSum() + 1L;
-                    cart.setSum(newSum);
-                    this.cartRepository.save(cart);
-                    // update session(sum)
-                    session.setAttribute("sum", newSum);
                 }
-                //
 
                 // Nếu sp đã được thêm vào giỏ hàng trước đó rồi , thì update quantity cho nó
                 else {
-                    oldCartDetail.setQuantity(oldCartDetail.getQuantity() + quantity);
+                    oldCartDetail.setQuantity(oldCartDetail.getQuantity() + safeQuantity);
                     this.cartDetailsRepository.save(oldCartDetail);
                 }
-                // Lưu cart vào session để thanh toán
+
+                long newSum = currentSum + safeQuantity;
+                cart.setSum(newSum);
+                this.cartRepository.save(cart);
                 session.setAttribute("cartId", cart.getId());
-                session.setAttribute("sum", cart.getSum());
+                Cart refreshedCart = this.cartRepository.findById(cart.getId()).orElse(cart);
+                updateSessionCartState(session, refreshedCart);
             }
         }
     }
@@ -170,17 +168,21 @@ public class ProductService {
             // delete cartDetail
             this.cartDetailsRepository.deleteById(cartDetailId);
 
+            long removedQuantity = cartDetails.getQuantity();
+            long currentSum = currentCart.getSum() == null ? 0L : currentCart.getSum();
+            long newSum = Math.max(0L, currentSum - removedQuantity);
+
             // update cart
-            if (currentCart.getSum() > 1) {
-                Long newSum = currentCart.getSum() - 1L;
+            if (newSum > 0) {
                 currentCart.setSum(newSum);
-                session.setAttribute("sum", newSum);
                 this.cartRepository.save(currentCart);
+                Cart refreshedCart = this.cartRepository.findById(currentCart.getId()).orElse(currentCart);
+                updateSessionCartState(session, refreshedCart);
             } else {
-                // xóa cả cart nếu không còn sản phẩm
+                // xoa cart neu khong con san pham
                 this.cartRepository.deleteById(currentCart.getId());
                 // update session
-                session.setAttribute("sum", 0);
+                clearSessionCartState(session);
             }
         }
     }
@@ -260,16 +262,48 @@ public class ProductService {
 
                 if (orderItems.size() == cartDetails.size()) {
                     this.cartRepository.deleteById(cart.getId());
-                    session.setAttribute("sum", 0);
+                    clearSessionCartState(session);
                 } else {
                     long currentSum = cart.getSum() == null ? 0L : cart.getSum();
-                    long newSum = Math.max(0L, currentSum - orderItems.size());
+                    long removedQuantity = orderItems.stream()
+                            .mapToLong(cd -> cd == null ? 0L : cd.getQuantity())
+                            .sum();
+                    long newSum = Math.max(0L, currentSum - removedQuantity);
                     cart.setSum(newSum);
                     this.cartRepository.save(cart);
-                    session.setAttribute("sum", newSum);
+                    Cart refreshedCart = this.cartRepository.findById(cart.getId()).orElse(cart);
+                    updateSessionCartState(session, refreshedCart);
                 }
             }
         }
+    }
+
+    private void updateSessionCartState(HttpSession session, Cart cart) {
+        if (session == null) {
+            return;
+        }
+        long totalQuantity = cart != null && cart.getSum() != null ? cart.getSum() : 0L;
+        session.setAttribute("sum", totalQuantity);
+        session.setAttribute("cartItemCount", countDistinctCartItems(cart));
+    }
+
+    private void clearSessionCartState(HttpSession session) {
+        if (session == null) {
+            return;
+        }
+        session.setAttribute("sum", 0L);
+        session.setAttribute("cartItemCount", 0);
+    }
+
+    private int countDistinctCartItems(Cart cart) {
+        if (cart == null || cart.getCartDetails() == null) {
+            return 0;
+        }
+        return (int) cart.getCartDetails().stream()
+                .filter(Objects::nonNull)
+                .map(cd -> cd.getProduct() != null ? cd.getProduct().getId() : cd.getId())
+                .collect(Collectors.toSet())
+                .size();
     }
 
     public Cart fetchCartByUser(User user) {
@@ -584,3 +618,4 @@ public class ProductService {
         }
     }
 }
+

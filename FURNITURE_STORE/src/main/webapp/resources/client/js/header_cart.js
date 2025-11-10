@@ -51,6 +51,14 @@
   const PLACEHOLDER_IMAGE =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='18' ry='18' fill='%23f1f5f9'/%3E%3Cpath d='M36 66h48M36 54h48M36 42h48' stroke='%2394a3b8' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E";
 
+  function updateCartBadgeValue(value) {
+    const parsed = typeof value === "number" ? value : parseInt(value, 10);
+    const safeValue = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    document
+      .querySelectorAll("[data-mini-cart-count]")
+      .forEach((badge) => (badge.textContent = safeValue));
+  }
+
   function initMiniCart() {
     const root = document.querySelector("[data-mini-cart]");
     if (!root) {
@@ -128,16 +136,50 @@
       if (totalLabel) {
         totalLabel.textContent = "";
       }
+      updateCartBadgeValue(0);
     }
 
-    function renderItems(items) {
+    function computeTotalQuantity(items) {
+      if (!Array.isArray(items) || !items.length) {
+        return 0;
+      }
+      return items.reduce((sum, item) => {
+        const qty = item && Number(item.quantity);
+        return sum + (Number.isFinite(qty) && qty > 0 ? qty : 0);
+      }, 0);
+    }
+
+    function normalizePayload(data) {
+      if (Array.isArray(data)) {
+        return {
+          items: data,
+          totalQuantity: computeTotalQuantity(data),
+        };
+      }
+      if (data && Array.isArray(data.items)) {
+        const parsedTotal =
+          typeof data.totalQuantity === "number" &&
+          Number.isFinite(data.totalQuantity)
+            ? data.totalQuantity
+            : computeTotalQuantity(data.items);
+        return {
+          items: data.items,
+          totalQuantity: parsedTotal,
+        };
+      }
+      return { items: [], totalQuantity: 0 };
+    }
+
+    function renderItems(items, totalQuantity) {
       if (!Array.isArray(items) || !items.length) {
         setState("Chưa có sản phẩm trong giỏ hàng", "empty");
         return;
       }
       body.innerHTML = items
         .map((item) => {
-          const image = item.image ? `/images/product/${item.image}` : PLACEHOLDER_IMAGE;
+          const image = item.image
+            ? `/images/product/${item.image}`
+            : PLACEHOLDER_IMAGE;
           const name = item.name || "Sản phẩm";
           const quantity = item.quantity || 1;
           const price = currencyFormatter.format(item.price || 0);
@@ -158,8 +200,13 @@
         })
         .join("");
       if (totalLabel) {
-        totalLabel.textContent = `${items.length} sản phẩm`;
+        const count =
+          Number.isFinite(totalQuantity) && totalQuantity > 0
+            ? totalQuantity
+            : items.length;
+        totalLabel.textContent = `${count} sản phẩm`;
       }
+      updateCartBadgeValue(totalQuantity);
     }
 
     function fetchMiniCart() {
@@ -182,7 +229,8 @@
         })
         .then((data) => {
           hasLoaded = true;
-          renderItems(data);
+          const payload = normalizePayload(data);
+          renderItems(payload.items, payload.totalQuantity);
         })
         .catch(() => {
           setState("Không tải được dữ liệu giỏ hàng", "error");
@@ -191,6 +239,11 @@
           isLoading = false;
         });
     }
+
+    document.addEventListener("cart:refresh", () => {
+      hasLoaded = false;
+      fetchMiniCart();
+    });
   }
 
   initUserMenu();

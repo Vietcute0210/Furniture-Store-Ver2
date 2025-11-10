@@ -116,7 +116,10 @@ uri="http://www.springframework.org/tags/form" %>
                       data-media-src="/images/product/${product.image}"
                       aria-label="Ảnh chính"
                     >
-                      <img src="/images/product/${product.image}" alt="${product.name}" />
+                      <img
+                        src="/images/product/${product.image}"
+                        alt="${product.name}"
+                      />
                     </button>
                     <button
                       class="media-thumb"
@@ -175,54 +178,81 @@ uri="http://www.springframework.org/tags/form" %>
                 </div>
                 <p class="mb-4">${product.shortDesc}</p>
 
-                <div class="input-group quantity mb-5" style="width: 100px">
-                  <div class="input-group-btn">
-                    <button
-                      class="btn btn-sm btn-minus rounded-circle bg-light border"
-                    >
-                      <i class="fa fa-minus"></i>
-                    </button>
+                <c:set var="redirectBase" value="/product/${product.id}" />
+                <c:if test="${not empty pageContext.request.requestURI}">
+                  <c:set var="redirectBase" value="${pageContext.request.requestURI}" />
+                </c:if>
+                <c:if test="${not empty requestScope['javax.servlet.forward.request_uri']}">
+                  <c:set var="redirectBase" value="${requestScope['javax.servlet.forward.request_uri']}" />
+                </c:if>
+                <c:set var="redirectQuery" value="" />
+                <c:if test="${not empty pageContext.request.queryString}">
+                  <c:set var="redirectQuery" value="${pageContext.request.queryString}" />
+                </c:if>
+                <c:if test="${not empty requestScope['javax.servlet.forward.query_string']}">
+                  <c:set var="redirectQuery" value="${requestScope['javax.servlet.forward.query_string']}" />
+                </c:if>
+                <c:set var="resolvedRedirectUrl" value="${redirectBase}" />
+                <c:if test="${not empty redirectQuery}">
+                  <c:set var="resolvedRedirectUrl" value="${redirectBase}?${redirectQuery}" />
+                </c:if>
+
+                <form
+                  action="/add-product-to-cart/${product.id}"
+                  method="post"
+                  class="product-detail-cart-form d-flex flex-column align-items-start"
+                >
+                  <div class="input-group quantity mb-4" style="width: 120px">
+                    <div class="input-group-btn">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-minus rounded-circle bg-light border"
+                      >
+                        <i class="fa fa-minus"></i>
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm text-center border-0"
+                      value="1"
+                      data-cart-detail-index="0"
+                      inputmode="numeric"
+                      autocomplete="off"
+                    />
+                    <div class="input-group-btn">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-plus rounded-circle bg-light border"
+                      >
+                        <i class="fa fa-plus"></i>
+                      </button>
+                    </div>
                   </div>
                   <input
-                    type="text"
-                    class="form-control form-control-sm text-center border-0"
-                    value="1"
-                    data-cart-detail-index="0"
+                    type="hidden"
+                    name="${_csrf.parameterName}"
+                    value="${_csrf.token}"
                   />
-                  <div class="input-group-btn">
-                    <button
-                      class="btn btn-sm btn-plus rounded-circle bg-light border"
-                    >
-                      <i class="fa fa-plus"></i>
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="hidden"
-                  name="${_csrf.parameterName}"
-                  value="${_csrf.token}"
-                />
-                <input
-                  class="form-control d-none"
-                  type="text"
-                  value="${product.id}"
-                  name="id"
-                />
-
-                <input
-                  class="form-control d-none"
-                  type="text"
-                  name="quantity"
-                  id="cartDetails0.quantity"
-                  value="1"
-                />
-                <button
-                  data-product-id="${product.id}"
-                  class="btnAddToCartDetail btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary"
-                >
-                  <i class="fa fa-shopping-bag me-2 text-primary"></i>
-                  Add to cart
-                </button>
+                  <input
+                    type="hidden"
+                    name="quantity"
+                    id="cartDetails0.quantity"
+                    value="1"
+                  />
+                  <input
+                    type="hidden"
+                    name="redirectUrl"
+                    value="${resolvedRedirectUrl}"
+                  />
+                  <button
+                    type="submit"
+                    data-product-id="${product.id}"
+                    class="btnAddToCartDetail btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary"
+                  >
+                    <i class="fa fa-shopping-bag me-2 text-primary"></i>
+                    Add to cart
+                  </button>
+                </form>
               </div>
               <div class="col-lg-12">
                 <nav>
@@ -266,9 +296,7 @@ uri="http://www.springframework.org/tags/form" %>
                   <li>Freeship nội thành trong 24h</li>
                   <li>Giảm thêm 5% khi mua combo</li>
                 </ul>
-                <button class="recommended-sidebar__btn">
-                  Lấy mã ưu đãi
-                </button>
+                <button class="recommended-sidebar__btn">Lấy mã ưu đãi</button>
               </div>
               <div class="recommended-sidebar__card">
                 <p class="recommended-sidebar__title">
@@ -288,12 +316,16 @@ uri="http://www.springframework.org/tags/form" %>
                   <span>Đánh giá: 4.9/5 (1.2k+ lượt)</span>
                 </div>
                 <div class="recommended-sidebar__policies">
-                  <span><i class="fa fa-shield-alt"></i> Bảo hành 12 tháng</span>
+                  <span
+                    ><i class="fa fa-shield-alt"></i> Bảo hành 12 tháng</span
+                  >
                   <span><i class="fa fa-undo"></i> Đổi trả trong 7 ngày</span>
                   <span><i class="fa fa-headset"></i> Tư vấn 24/7</span>
                 </div>
               </div>
-              <div class="recommended-sidebar__card recommended-sidebar__card--highlight">
+              <div
+                class="recommended-sidebar__card recommended-sidebar__card--highlight"
+              >
                 <p>Liên hệ ngay để được tư vấn miễn phí:</p>
                 <a href="tel:0123456789" class="recommended-sidebar__hotline">
                   <i class="fa fa-phone"></i>
@@ -337,9 +369,7 @@ uri="http://www.springframework.org/tags/form" %>
                           </span>
                         </div>
                         <div class="recommended-card__body">
-                          <p class="recommended-card__name">
-                            ${item.name}
-                          </p>
+                          <p class="recommended-card__name">${item.name}</p>
                           <p class="recommended-card__factory">
                             ${item.factory}
                           </p>

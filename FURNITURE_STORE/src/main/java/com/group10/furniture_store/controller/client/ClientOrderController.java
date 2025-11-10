@@ -110,7 +110,7 @@ public class ClientOrderController {
             @RequestParam("receiverAddress") String receiverAddress,
             @RequestParam("receiverPhone") String receiverPhone,
             @RequestParam("paymentMethod") String paymentMethod,
-            @RequestParam("totalPrice") String totalPrice) {
+            @RequestParam(value = "totalPrice", required = false) String totalPrice) {
 
         HttpSession session = request.getSession();
         long id = (long) session.getAttribute("id");
@@ -127,12 +127,12 @@ public class ClientOrderController {
                 receiverPhone,
                 paymentMethod,
                 uuid,
-                Double.parseDouble(totalPrice),
+                parseDouble(totalPrice),
                 getSelectedIdsFromSession(session));
 
         session.removeAttribute(SELECTED_CART_DETAILS_SESSION_KEY);
 
-        return "redirect:/order/after-order";
+        return "redirect:/thankyou";
     }
 
     @GetMapping("/after-order")
@@ -180,5 +180,16 @@ public class ClientOrderController {
             return result;
         }
         return Collections.emptyList();
+    }
+
+    private double parseDouble(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return 0d;
+        }
+        try {
+            return Double.parseDouble(raw.trim());
+        } catch (NumberFormatException ignored) {
+            return 0d;
+        }
     }
 }

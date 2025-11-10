@@ -53,23 +53,31 @@ public class CartAPI {
     public ResponseEntity<Integer> addProductToCart(@RequestBody CartRequest cartRequest, HttpServletRequest request) {
         HttpSession session = request.getSession();
         String email = (String) session.getAttribute("email");
-        this.productService.handleAddProductToCart(email, cartRequest.getProductId(), session,
-                cartRequest.getQuantity() == 0 ? 1 : cartRequest.getQuantity());
-        int sum = (int) session.getAttribute("sum");
-        return ResponseEntity.ok().body(sum);
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+        long quantity = cartRequest.getQuantity() == 0 ? 1 : cartRequest.getQuantity();
+        this.productService.handleAddProductToCart(email, cartRequest.getProductId(), session, quantity);
+        Object distinctAttr = session.getAttribute("cartItemCount");
+        int distinctCount = distinctAttr instanceof Number ? ((Number) distinctAttr).intValue() : 0;
+        if (distinctCount <= 0) {
+            Object sumAttr = session.getAttribute("sum");
+            distinctCount = sumAttr instanceof Number ? ((Number) sumAttr).intValue() : 0;
+        }
+        return ResponseEntity.ok(distinctCount);
     }
 
     //=====================sửa thêm start==========================
 
     @GetMapping("/api/cart/preview")
-    public ResponseEntity<List<Map<String, Object>>> getCartPreview(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> getCartPreview(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("id") == null) {
-            return ResponseEntity.ok(Collections.emptyList());
+            return ResponseEntity.ok(buildPreviewResponse(Collections.emptyList(), 0));
         }
         Object userIdAttr = session.getAttribute("id");
         if (!(userIdAttr instanceof Number)) {
-            return ResponseEntity.ok(Collections.emptyList());
+            return ResponseEntity.ok(buildPreviewResponse(Collections.emptyList(), 0));
         }
         long userId = ((Number) userIdAttr).longValue();
         User currentUser = new User();
@@ -77,7 +85,7 @@ public class CartAPI {
 
         Cart cart = this.productService.fetchCartByUser(currentUser);
         if (cart == null || cart.getCartDetails() == null) {
-            return ResponseEntity.ok(Collections.emptyList());
+            return ResponseEntity.ok(buildPreviewResponse(Collections.emptyList(), 0));
         }
 
         List<Map<String, Object>> previewItems = cart.getCartDetails().stream()
@@ -95,14 +103,27 @@ public class CartAPI {
                         map.put("image", cartDetails.getProduct().getImage());
                     } else {
                         map.put("productId", null);
-                        map.put("name", "Sản phẩm");
+                        map.put("name", "S???n ph??cm");
                         map.put("image", null);
                     }
                     return map;
                 })
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(previewItems);
+        long totalDistinctItems = cart.getCartDetails().stream()
+                .filter(Objects::nonNull)
+                .map(cd -> cd.getProduct() != null ? cd.getProduct().getId() : cd.getId())
+                .distinct()
+                .count();
+        return ResponseEntity.ok(buildPreviewResponse(previewItems, (int) totalDistinctItems));
     }
+
+    private Map<String, Object> buildPreviewResponse(List<Map<String, Object>> items, int totalQuantity) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("items", items);
+        payload.put("totalQuantity", Math.max(0, totalQuantity));
+        return payload;
+    }
+
 }
 //=====================sửa thêm end==========================

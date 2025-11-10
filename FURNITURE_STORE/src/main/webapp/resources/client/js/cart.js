@@ -217,6 +217,11 @@ $(document).ready(function () {
       });
     }
     $("[data-cart-total-price]").text(formatCurrency(total));
+
+    const totalField = $("[data-cart-total-field]");
+    if (totalField.length) {
+      totalField.val(total);
+    }
   }
 
   function syncHiddenQuantity(input, qty) {
