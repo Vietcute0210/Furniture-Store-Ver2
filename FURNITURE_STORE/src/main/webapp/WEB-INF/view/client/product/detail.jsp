@@ -425,6 +425,7 @@ uri="http://www.springframework.org/tags/form" %>
 
     <script src="/client/js/main.js"></script>
     <script src="/client/js/effects.js"></script>
+    <script src="/client/js/cart_common.js"></script>
     <script src="/client/js/cart_fly.js"></script>
     <script src="/client/js/product_detail.js"></script>
 

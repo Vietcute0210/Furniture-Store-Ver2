@@ -12,6 +12,8 @@
                     <meta content="width=device-width, initial-scale=1.0" name="viewport">
                     <meta content="" name="keywords">
                     <meta content="" name="description">
+                    <meta name="_csrf" content="${_csrf.token}" />
+                    <meta name="_csrf_header" content="${_csrf.headerName}" />
                     <link rel="preconnect" href="https://fonts.googleapis.com">
                     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                     <link
@@ -292,6 +294,7 @@
 
                     <script src="/client/js/main.js"></script>
                     <script src="/client/js/effects.js"></script>
+                    <script src="/client/js/cart_common.js"></script>
                     <script src="/client/js/cart_fly.js"></script>
                     <script src="/client/js/product_detail.js"></script>
                     <script src="/client/js/product_filter.js"></script>

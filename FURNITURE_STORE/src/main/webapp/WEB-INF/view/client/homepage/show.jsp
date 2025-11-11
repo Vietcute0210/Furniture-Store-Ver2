@@ -356,9 +356,10 @@
     <script src="/client/lib/waypoints/waypoints.min.js"></script>
     <script src="/client/lib/lightbox/js/lightbox.min.js"></script>
     <script src="/client/lib/owlcarousel/owl.carousel.min.js"></script>
-    <script src="/client/js/main.js"></script>
-    <script src="/client/js/effects.js"></script>
-    <script src="/client/js/cart_fly.js"></script>
+                    <script src="/client/js/main.js"></script>
+                    <script src="/client/js/effects.js"></script>
+                    <script src="/client/js/cart_common.js"></script>
+                    <script src="/client/js/cart_fly.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
     
                 <!-- Toast Container - Đặt ở góc dưới bên phải -->

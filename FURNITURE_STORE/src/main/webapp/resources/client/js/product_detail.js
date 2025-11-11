@@ -11,18 +11,18 @@ document.addEventListener("DOMContentLoaded", () => {
   fadeEls.forEach((el) => observer.observe(el));
 
   // Add to cart animation
-  const btn = document.querySelector(".btnAddToCartDetail");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      $.toast({
-        heading: "Đã thêm vào giỏ hàng",
-        text: "Sản phẩm của bạn đã được thêm thành công!",
-        showHideTransition: "slide",
-        icon: "success",
-        position: "bottom-right",
-      });
-    });
-  }
+  // const btn = document.querySelector(".btnAddToCartDetail");
+  // if (btn) {
+  //   btn.addEventListener("click", () => {
+  //     $.toast({
+  //       heading: "Đã thêm vào giỏ hàng",
+  //       text: "Sản phẩm của bạn đã được thêm thành công!",
+  //       showHideTransition: "slide",
+  //       icon: "success",
+  //       position: "bottom-right",
+  //     });
+  //   });
+  // }
 
   const detailForm = document.querySelector(".product-detail-cart-form");
   if (detailForm) {
