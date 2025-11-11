@@ -1,6 +1,8 @@
 package com.group10.furniture_store.service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,8 @@ import org.springframework.stereotype.Service;
 import com.group10.furniture_store.domain.Product;
 import com.group10.furniture_store.domain.Warehouse;
 import com.group10.furniture_store.repository.WarehouseRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class WarehouseService {
@@ -19,23 +23,19 @@ public class WarehouseService {
         System.out.println("Getting warehouse for product: " + productId);
         Optional<Warehouse> warehouse = warehouseRepository.findByProductId(productId);
         if (warehouse.isPresent()) {
-            System.out.println("Found warehouse with quantity: " + warehouse.get().getQuantity());
             return warehouse.get();
         } else {
-            System.out.println("Warehouse not found for product: " + productId);
             return null;
         }
     }
 
-    public Integer getStockQuantity(Long productId) {
-        System.out.println("Getting stock quantity for product: " + productId);
+    public Long getStockQuantity(Long productId) {
         Warehouse warehouse = getWarehouseByProductId(productId);
-        Integer quantity = warehouse != null ? warehouse.getQuantity() : 0;
-        System.out.println("Stock quantity: " + quantity);
+        Long quantity = warehouse != null ? warehouse.getQuantity() : 0L;
         return quantity;
     }
 
-    public void updateStockQuantity(Long productId, Integer newQuantity) {
+    public void updateStockQuantity(Long productId, Long newQuantity) {
         Optional<Warehouse> warehouse = warehouseRepository.findByProductId(productId);
         if (warehouse.isPresent()) {
             Warehouse w = warehouse.get();
@@ -45,24 +45,59 @@ public class WarehouseService {
         }
     }
 
-    public void decreaseStock(Long productId, Integer quantity) {
-        Integer currentStock = getStockQuantity(productId);
-        if (currentStock >= quantity) {
-            updateStockQuantity(productId, currentStock - quantity);
+    // Kiểm tra và trừ tồn kho (riêng sp) với pessimistic lock để tránh race
+    // condition
+    // Trả về true nếu trừ được , false nếu đã hết hàng
+    @Transactional
+    public boolean decreaseStockSafely(Long productId, Long quantity) {
+        Optional<Warehouse> warehouseOptional = warehouseRepository.findByProductIdWithLock(productId);
+
+        if (warehouseOptional.isEmpty()) {
+            return false;
         }
+
+        Warehouse warehouse = warehouseOptional.get();
+
+        // Kiểm tra slg sp trong kho có đủ để đơn hàng lấy ko
+        if (warehouse.getQuantity() < quantity) {
+            return false; // Không đủ hàng
+        }
+
+        // Trừ tồn kho
+        warehouse.setQuantity(warehouse.getQuantity() - quantity);
+        warehouse.setLastUpdated(LocalDateTime.now());
+        warehouseRepository.save(warehouse);
+
+        return true;
     }
 
-    public void increaseStock(Long productId, Integer quantity) {
-        Integer currentStock = getStockQuantity(productId);
-        updateStockQuantity(productId, currentStock + quantity);
+    // Ktra trong kho có đủ sp ko
+    public boolean checkStockAvailability(Long productId, Long quantity) {
+        Long currentStock = getStockQuantity(productId);
+        return currentStock >= quantity;
     }
 
+    // Ktra và trừ tồn kho sl sp trong đơn hàng
+    @Transactional
+    public Map<Long, Boolean> decreaseStockForMultipleProducts(Map<Long, Long> productQuantities) {
+        Map<Long, Boolean> results = new HashMap<>();
+
+        for (Map.Entry<Long, Long> entry : productQuantities.entrySet()) {
+            Long productId = entry.getKey();
+            Long quantity = entry.getValue();
+            results.put(productId, decreaseStockSafely(productId, quantity));
+        }
+
+        return results;
+    }
+
+    @Transactional
     public Warehouse getOrCreateWarehouse(Product product) {
         Optional<Warehouse> warehouse = warehouseRepository.findByProductId(product.getId());
         if (warehouse.isEmpty()) {
             Warehouse newWarehouse = new Warehouse();
             newWarehouse.setProduct(product);
-            newWarehouse.setQuantity(0);
+            newWarehouse.setQuantity(0L);
             newWarehouse.setLastUpdated(LocalDateTime.now());
             return warehouseRepository.save(newWarehouse);
         }

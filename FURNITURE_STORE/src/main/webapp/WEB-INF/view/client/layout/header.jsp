@@ -27,7 +27,7 @@
                 <div class="header-actions d-flex align-items-center ms-auto">
                     <c:if test="${not empty pageContext.request.userPrincipal}">
                         <c:set var="cartSum"
-                            value="${sessionScope.cartItemCount != null ? sessionScope.cartItemCount : (sessionScope.sum != null ? sessionScope.sum : 0)}" />
+                            value="${sessionScope.sum != null ? sessionScope.sum : (sessionScope.cartItemCount != null ? sessionScope.cartItemCount : 0)}" />
                         <div class="header-cart" data-mini-cart data-fetch-url="/api/cart/preview">
                             <button type="button" class="header-icon header-cart__btn" data-mini-cart-trigger
                                 aria-haspopup="true" aria-expanded="false" aria-label="Giỏ hàng">

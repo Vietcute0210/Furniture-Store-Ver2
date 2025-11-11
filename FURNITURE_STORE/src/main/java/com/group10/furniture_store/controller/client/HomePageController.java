@@ -2,8 +2,6 @@ package com.group10.furniture_store.controller.client;
 
 import java.util.List;
 
-import javax.naming.Binding;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.group10.furniture_store.constant.AppConstant;
 import com.group10.furniture_store.controller.BaseController;
 import com.group10.furniture_store.domain.Order;
 import com.group10.furniture_store.domain.PasswordResetToken;
@@ -29,14 +26,12 @@ import com.group10.furniture_store.domain.DTO.ChangePasswordDTO;
 import com.group10.furniture_store.domain.DTO.ForgotPasswordDTO;
 import com.group10.furniture_store.domain.DTO.RegisterDTO;
 import com.group10.furniture_store.domain.DTO.ResetPasswordDTO;
-import com.group10.furniture_store.messaging.message.EmailRequest;
 import com.group10.furniture_store.service.OrderService;
 import com.group10.furniture_store.service.ProductService;
 import com.group10.furniture_store.service.TokenService;
 import com.group10.furniture_store.service.UploadService;
 import com.group10.furniture_store.service.UserService;
 import com.group10.furniture_store.service.sendEmail.SendEmailService;
-import com.group10.furniture_store.utils.AppUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -135,36 +130,6 @@ public class HomePageController extends BaseController {
         model.addAttribute("orders", orders);
         return "client/cart/order-history";
     }
-
-    // @GetMapping("/verify")
-    // public String getVerifyPage(@ModelAttribute("registerUser") @Valid
-    // RegisterDTO registerDTO,
-    // BindingResult bindingResult, Model model) {
-    // log.info("Request to /verify");
-    // String email = registerDTO.getEmail();
-    // if (bindingResult.hasErrors()) {
-    // String password = registerDTO.getPassword();
-    // String confirmPassword = registerDTO.getConfirmPassword();
-    // String regexp = AppConstant.REGEX_EMAIL;
-    // if (this.userService.checkEmailExist(email))
-    // model.addAttribute("errorEmailExist", "Email already exists");
-    // if (!email.matches(regexp))
-    // model.addAttribute("errorEmail", "Invalid email format");
-    // if (password.length() < 6)
-    // model.addAttribute("errorPassword", "Password must have at least 6
-    // characters");
-    // else if (!confirmPassword.equals(password))
-    // model.addAttribute("errorConfirmPassword", "Password confirmation does not
-    // match");
-    // return "client/auth/register";
-    // }
-    // String OTP = AppUtil.getRandomOTP();
-    // EmailRequest emailRequest = new EmailRequest();
-    // emailProducer.sendEmailToQueue(emailRequest);
-    // registerDTO.setOTP(OTP);
-    // model.addAttribute("registerDTO", registerDTO);
-    // return "client/auth/verify-mail";
-    // }
 
     @GetMapping("/forgot-password")
     public String getForgotPasswordPage(Model model) {

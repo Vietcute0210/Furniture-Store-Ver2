@@ -156,10 +156,10 @@ public class Product implements Serializable {
                 + factory + ", target=" + target + "]";
     }
 
-    public Integer getStockQuantity() {
+    public Long getStockQuantity() {
         if (warehouse == null)
-            return 0;
-        return warehouse.getQuantity() != null ? warehouse.getQuantity() : 0;
+            return 0L;
+        return warehouse.getQuantity() != null ? warehouse.getQuantity() : 0L;
     }
 
 }

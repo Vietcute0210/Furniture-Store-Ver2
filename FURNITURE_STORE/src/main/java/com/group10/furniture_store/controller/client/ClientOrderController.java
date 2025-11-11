@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.group10.furniture_store.domain.Cart;
 import com.group10.furniture_store.domain.CartDetails;
@@ -106,6 +107,7 @@ public class ClientOrderController {
     @PostMapping("/place-order")
     public String handlePlaceOrder(
             HttpServletRequest request,
+            RedirectAttributes redirectAttributes,
             @RequestParam("receiverName") String receiverName,
             @RequestParam("receiverAddress") String receiverAddress,
             @RequestParam("receiverPhone") String receiverPhone,
@@ -119,20 +121,27 @@ public class ClientOrderController {
         currentUser.setId(id);
 
         final String uuid = UUID.randomUUID().toString().replace("-", "");
-        this.productService.handlePlaceOrder(
-                currentUser,
-                session,
-                receiverName,
-                receiverAddress,
-                receiverPhone,
-                paymentMethod,
-                uuid,
-                parseDouble(totalPrice),
-                getSelectedIdsFromSession(session));
+        try {
+            this.productService.handlePlaceOrder(
+                    currentUser,
+                    session,
+                    receiverName,
+                    receiverAddress,
+                    receiverPhone,
+                    paymentMethod,
+                    uuid,
+                    parseDouble(totalPrice),
+                    getSelectedIdsFromSession(session));
 
-        session.removeAttribute(SELECTED_CART_DETAILS_SESSION_KEY);
+            session.removeAttribute(SELECTED_CART_DETAILS_SESSION_KEY);
+            return "redirect:/thankyou";
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "C� l?i x?y ra khi d?t h�ng: " + ex.getMessage());
+        }
 
-        return "redirect:/thankyou";
+        return "redirect:/order/checkout";
     }
 
     @GetMapping("/after-order")

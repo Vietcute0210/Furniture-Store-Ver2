@@ -37,6 +37,12 @@
                     <div class="container-fluid py-5">
                         <div class="container py-5 checkout-section">
                             <h1 class="mb-4 checkout-page-title">Thanh toán đơn hàng</h1>
+                            <c:set var="checkoutError" value="${not empty error ? error : param.error}" />
+                            <c:if test="${not empty checkoutError}">
+                                <div class="alert alert-danger mb-4 checkout-alert" role="alert">
+                                    <c:out value="${checkoutError}" />
+                                </div>
+                            </c:if>
                             <form action="/order/place-order" method="post" id="checkoutForm">
                                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                 <input type="hidden" name="totalPrice" value="${totalPrice}" data-cart-total-field />

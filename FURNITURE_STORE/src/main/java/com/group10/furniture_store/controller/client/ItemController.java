@@ -8,6 +8,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,8 +17,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -44,13 +44,15 @@ public class ItemController {
     public String getProductPage(Model model, @PathVariable long id) {
         Product product = this.productService.getProductById(id);
         model.addAttribute("product", product);
+        // gợi ý sản phẩm liên quan
         model.addAttribute("recommendations", this.productService.getRecommendedProducts(product, 4));
         return "client/product/detail";
     }
 
     @GetMapping("/products")
     public String getProductPage(Model model,
-            @RequestParam("page") Optional<String> pageOptional) {
+                                 @RequestParam("page") Optional<String> pageOptional,
+                                 HttpServletRequest request) {
         int page = 1;
         try {
             if (pageOptional.isPresent()) {
@@ -62,9 +64,26 @@ public class ItemController {
         Pageable pageable = PageRequest.of(page - 1, 3);
         Page<Product> products = this.productService.getAllProducts(pageable);
 
+        // giữ lại query string (trừ tham số page) để phân trang kèm filter/search
+        String queryString = request.getQueryString();
+        if (queryString != null && queryString.contains("page=")) {
+            queryString = queryString.replaceAll("page=\\d+&?", "");
+            queryString = queryString.replaceAll("&$", "");
+            if (queryString.length() > 0 && !queryString.startsWith("&")) {
+                queryString = "&" + queryString;
+            } else if (queryString.length() == 0) {
+                queryString = "";
+            }
+        } else if (queryString != null && queryString.length() > 0) {
+            queryString = "&" + queryString;
+        } else {
+            queryString = "";
+        }
+
         model.addAttribute("products", products.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", products.getTotalPages());
+        model.addAttribute("queryString", queryString);
         return "client/product/show";
     }
 
@@ -74,7 +93,8 @@ public class ItemController {
             @RequestParam(value = "quantity", required = false, defaultValue = "1") long quantity,
             @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpServletRequest request) {
-        return processAddProductToCart(id, quantity, redirectUrl, "/", request);
+        // fallback cũ: quay về trang /products khi không có redirectUrl
+        return processAddProductToCart(id, quantity, redirectUrl, "/products", request);
     }
 
     @PostMapping("/add-product-from-view-detail")
@@ -83,16 +103,27 @@ public class ItemController {
             @RequestParam("quantity") long quantity,
             @RequestParam(value = "redirectUrl", required = false) String redirectUrl,
             HttpServletRequest request) {
+        // fallback: quay lại trang chi tiết sản phẩm
         return processAddProductToCart(id, quantity, redirectUrl, "/product/" + id, request);
     }
 
-    private String processAddProductToCart(long productId, long quantity, String redirectUrl, String fallback,
-            HttpServletRequest request) {
+    private String processAddProductToCart(long productId,
+                                           long quantity,
+                                           String redirectUrl,
+                                           String fallback,
+                                           HttpServletRequest request) {
         HttpSession session = request.getSession();
         String email = (String) session.getAttribute("email");
+
+        // giữ behavior cũ: bắt đăng nhập
+        if (email == null || email.trim().isEmpty()) {
+            return "redirect:/login";
+        }
+
         long safeQuantity = quantity <= 0 ? 1 : quantity;
         this.productService.handleAddProductToCart(email, productId, session, safeQuantity);
-        return "redirect:" + resolveRedirectTarget(redirectUrl, fallback, request.getContextPath());
+        String target = resolveRedirectTarget(redirectUrl, fallback, request.getContextPath());
+        return "redirect:" + target;
     }
 
     private String resolveRedirectTarget(String redirectUrl, String fallback, String contextPath) {
@@ -133,13 +164,23 @@ public class ItemController {
         Cart cart = this.productService.fetchCartByUser(currentUser);
         if (cart != null) {
             session.setAttribute("cartId", cart.getId());
-            session.setAttribute("sum", cart.getSum());
+
+            // tính lại sum từ cartDetails cho chắc
+            Long sum = cart.getCartDetails() != null ? (long) cart.getCartDetails().size() : 0L;
+            cart.setSum(sum);
+            session.setAttribute("sum", sum);
+
+            // đếm số dòng cartDetails (distinct item)
             int distinctCount = cart.getCartDetails() == null ? 0
                     : (int) cart.getCartDetails().stream().filter(java.util.Objects::nonNull).count();
             session.setAttribute("cartItemCount", distinctCount);
         } else {
+            // không có cart: reset session
+            session.removeAttribute("cartId");
+            session.setAttribute("sum", 0L);
             session.setAttribute("cartItemCount", 0);
         }
+
         List<CartDetails> cartDetails = cart == null ? new ArrayList<>() : cart.getCartDetails();
 
         double totalPrice = 0;
@@ -167,7 +208,7 @@ public class ItemController {
         return "redirect:/checkout";
     }
 
-    //=====================sửa thêm start==========================
+    // ===================== filter-products start ==========================
 
     @GetMapping("/products/filter-data")
     public ResponseEntity<?> filterProducts(
@@ -187,7 +228,7 @@ public class ItemController {
                 map.put("factory", p.getFactory());
                 map.put("target", p.getTarget());
 
-                Integer stockQuantity = warehouseService.getStockQuantity(p.getId());
+                Long stockQuantity = warehouseService.getStockQuantity(p.getId());
                 map.put("stockQuantity", stockQuantity != null ? stockQuantity : 0);
                 return map;
             }).collect(java.util.stream.Collectors.toList());
@@ -199,7 +240,7 @@ public class ItemController {
         }
     }
 
-    //=====================sửa thêm end==========================
+    // ===================== filter-products end ==========================
 
     @GetMapping("/search")
     public ResponseEntity<?> searchProducts(@RequestParam("keyword") String keyword) {
@@ -214,7 +255,7 @@ public class ItemController {
                 map.put("shortDesc", p.getShortDesc());
 
                 // Load stock từ warehouse service
-                Integer stockQuantity = warehouseService.getStockQuantity(p.getId());
+                Long stockQuantity = warehouseService.getStockQuantity(p.getId());
                 map.put("stockQuantity", stockQuantity != null ? stockQuantity : 0);
 
                 return map;
@@ -232,6 +273,8 @@ public class ItemController {
         if (orderId != null) {
             model.addAttribute("orderId", orderId);
         }
+        // dùng view mới theo file 2
         return "client/cart/thankyou";
     }
 }
+    

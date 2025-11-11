@@ -28,7 +28,7 @@ public class Warehouse {
     private Product product;
 
     @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    private Long quantity;
 
     @Column(name = "location")
     private String location;

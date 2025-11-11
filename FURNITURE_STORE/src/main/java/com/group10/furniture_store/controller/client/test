@@ -1,4 +1,4 @@
-﻿package com.group10.furniture_store.controller.client;
+package com.group10.furniture_store.controller.client;
 
 import com.group10.furniture_store.domain.Cart;
 import com.group10.furniture_store.domain.CartDetails;

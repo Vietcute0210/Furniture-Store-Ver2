@@ -1,6 +1,5 @@
 ﻿package com.group10.furniture_store.service;
 
-//them thư viện
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +36,8 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ProductService {
-    //=====================thêm 3 dòng dưới=======================
+
+    // ===================== filter static maps =====================
     private static final Map<String, double[]> PRICE_RANGE_MAP = createPriceRangeMap();
     private static final Map<String, Set<String>> FACTORY_SYNONYMS = createFactorySynonyms();
     private static final Map<String, Set<String>> TARGET_KEYWORDS = createTargetKeywordMap();
@@ -48,11 +48,15 @@ public class ProductService {
     private final UserService userService;
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
-    private WarehouseService warehouseService;
+    private final WarehouseService warehouseService;
 
-    public ProductService(ProductRepository productRepository, CartRepository cartRepository,
-            CartDetailsRepository cartDetailsRepository, UserService userService, OrderRepository orderRepository,
-            OrderDetailRepository orderDetailRepository, WarehouseService warehouseService) {
+    public ProductService(ProductRepository productRepository,
+                          CartRepository cartRepository,
+                          CartDetailsRepository cartDetailsRepository,
+                          UserService userService,
+                          OrderRepository orderRepository,
+                          OrderDetailRepository orderDetailRepository,
+                          WarehouseService warehouseService) {
         this.productRepository = productRepository;
         this.cartRepository = cartRepository;
         this.cartDetailsRepository = cartDetailsRepository;
@@ -61,6 +65,8 @@ public class ProductService {
         this.orderDetailRepository = orderDetailRepository;
         this.warehouseService = warehouseService;
     }
+
+    // ===================== basic product ops =====================
 
     public Page<Product> getAllProducts(Pageable pageable) {
         return this.productRepository.findAll(pageable);
@@ -72,8 +78,7 @@ public class ProductService {
 
     public Product getProductById(long id) {
         Optional<Product> productOptional = this.productRepository.findById(id);
-        Product product = productOptional.isPresent() ? productOptional.get() : null;
-        return product;
+        return productOptional.orElse(null);
     }
 
     public List<Product> getRecommendedProducts(Product product, int limit) {
@@ -104,54 +109,39 @@ public class ProductService {
         this.productRepository.deleteById(id);
     }
 
+    // ===================== cart ops =====================
+
     public void handleAddProductToCart(String email, long productId, HttpSession session, long quantity) {
         long safeQuantity = quantity <= 0 ? 1 : quantity;
+
         User user = this.userService.getUserByEmail(email);
         if (user != null) {
-            // check user đã có Cart chưa ? Nếu chưa => Tạo mới
             Cart cart = this.cartRepository.findByUser(user);
             if (cart == null) {
-                // tạo mới cart khi user chưa có cart
-                Cart otherCart = new Cart();
-                otherCart.setUser(user);
-                otherCart.setSum(0L);
-
-                cart = this.cartRepository.save(otherCart);
+                Cart newCart = new Cart();
+                newCart.setUser(user);
+                newCart.setSum(0L);
+                cart = this.cartRepository.save(newCart);
             }
-            long currentSum = cart.getSum() == null ? 0L : cart.getSum();
 
-            // save cart detail
-            // tìm productById
+            Optional<Product> productOptional = this.productRepository.findById(productId);
+            if (productOptional.isPresent()) {
+                Product pr = productOptional.get();
 
-            Optional<Product> producOptional = this.productRepository.findById(productId);
-            if (producOptional.isPresent()) {
-                Product pr = producOptional.get();
-
-                // check sản phẩm đã từng được thêm vào giỏ hàng trước đó chưa
                 CartDetails oldCartDetail = this.cartDetailsRepository.findByCartAndProduct(cart, pr);
-                //
 
-                // Nếu chưa được thêm , thì phải thêm vào giỏ
                 if (oldCartDetail == null) {
                     CartDetails cd = new CartDetails();
-
                     cd.setCart(cart);
                     cd.setProduct(pr);
                     cd.setPrice(pr.getPrice());
                     cd.setQuantity(safeQuantity);
-
                     this.cartDetailsRepository.save(cd);
-                }
-
-                // Nếu sp đã được thêm vào giỏ hàng trước đó rồi , thì update quantity cho nó
-                else {
+                } else {
                     oldCartDetail.setQuantity(oldCartDetail.getQuantity() + safeQuantity);
                     this.cartDetailsRepository.save(oldCartDetail);
                 }
 
-                long newSum = currentSum + safeQuantity;
-                cart.setSum(newSum);
-                this.cartRepository.save(cart);
                 session.setAttribute("cartId", cart.getId());
                 Cart refreshedCart = this.cartRepository.findById(cart.getId()).orElse(cart);
                 updateSessionCartState(session, refreshedCart);
@@ -159,6 +149,7 @@ public class ProductService {
         }
     }
 
+    @Transactional
     public void handleRemoveCartDetail(long cartDetailId, HttpSession session) {
         Optional<CartDetails> cartDetailsOptional = this.cartDetailsRepository.findById(cartDetailId);
         if (cartDetailsOptional.isPresent()) {
@@ -168,27 +159,25 @@ public class ProductService {
             // delete cartDetail
             this.cartDetailsRepository.deleteById(cartDetailId);
 
-            long removedQuantity = cartDetails.getQuantity();
-            long currentSum = currentCart.getSum() == null ? 0L : currentCart.getSum();
-            long newSum = Math.max(0L, currentSum - removedQuantity);
-
-            // update cart
-            if (newSum > 0) {
-                currentCart.setSum(newSum);
-                this.cartRepository.save(currentCart);
-                Cart refreshedCart = this.cartRepository.findById(currentCart.getId()).orElse(currentCart);
+            // refresh cart from DB
+            Cart refreshedCart = this.cartRepository.findById(currentCart.getId()).orElse(null);
+            if (refreshedCart != null && refreshedCart.getCartDetails() != null && !refreshedCart.getCartDetails().isEmpty()) {
                 updateSessionCartState(session, refreshedCart);
             } else {
-                // xoa cart neu khong con san pham
+                // xóa cart nếu không còn sản phẩm
                 this.cartRepository.deleteById(currentCart.getId());
-                // update session
                 clearSessionCartState(session);
+                session.removeAttribute("cartId");
             }
         }
     }
 
     public void handleUpdateCartBeforeCheckout(List<CartDetails> cartDetails) {
+        if (cartDetails == null) {
+            return;
+        }
         for (CartDetails cd : cartDetails) {
+            if (cd == null) continue;
             Optional<CartDetails> cdOptional = this.cartDetailsRepository.findById(cd.getId());
             if (cdOptional.isPresent()) {
                 CartDetails currentCartDetails = cdOptional.get();
@@ -199,90 +188,194 @@ public class ProductService {
     }
 
     @Transactional
-    public void handlePlaceOrder(User user, HttpSession session, String receiverName, String receiverAddress,
-            String receiverPhone, String paymentMethod, String uuid, Double totalPrice,
-            List<Long> selectedCartDetailIds) {
-        // Get cart by user
+    public void updateCartDetailQuantity(Long cartDetailId, Long quantity, HttpSession session) {
+        Optional<CartDetails> cartDetailsOptional = this.cartDetailsRepository.findById(cartDetailId);
+        if (cartDetailsOptional.isPresent()) {
+            CartDetails cartDetails = cartDetailsOptional.get();
+            Cart cart = cartDetails.getCart();
+
+            cartDetails.setQuantity(quantity);
+            this.cartDetailsRepository.save(cartDetails);
+
+            Cart refreshedCart = this.cartRepository.findById(cart.getId()).orElse(cart);
+            updateSessionCartState(session, refreshedCart);
+        }
+    }
+
+    // ===================== order / checkout =====================
+
+    // bản đơn giản (giữ tương thích với PaymentController hiện tại)
+    @Transactional
+    public void handlePlaceOrder(User user,
+                                 HttpSession session,
+                                 String receiverName,
+                                 String receiverAddress,
+                                 String receiverPhone,
+                                 String paymentMethod,
+                                 String uuid,
+                                 Double totalPrice) {
+        handlePlaceOrder(user, session, receiverName, receiverAddress, receiverPhone,
+                paymentMethod, uuid, totalPrice, null);
+    }
+
+    // bản đầy đủ, cho phép chọn 1 phần cart để checkout
+    @Transactional
+    public void handlePlaceOrder(User user,
+                                 HttpSession session,
+                                 String receiverName,
+                                 String receiverAddress,
+                                 String receiverPhone,
+                                 String paymentMethod,
+                                 String uuid,
+                                 Double totalPrice,
+                                 List<Long> selectedCartDetailIds) {
+
         Cart cart = this.cartRepository.findByUser(user);
-        if (cart != null) {
-            List<CartDetails> cartDetails = cart.getCartDetails();
-            if (cartDetails != null && !cartDetails.isEmpty()) {
-                List<CartDetails> orderItems = cartDetails;
-                if (selectedCartDetailIds != null && !selectedCartDetailIds.isEmpty()) {
-                    Set<Long> selectedIdSet = selectedCartDetailIds.stream()
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toSet());
-                    orderItems = cartDetails.stream()
-                            .filter(cd -> cd != null && selectedIdSet.contains(cd.getId()))
-                            .collect(Collectors.toList());
-                }
+        if (cart == null) {
+            return;
+        }
 
-                if (orderItems.isEmpty()) {
-                    return;
-                }
+        List<CartDetails> cartDetails = cart.getCartDetails();
+        if (cartDetails == null || cartDetails.isEmpty()) {
+            return;
+        }
 
-                double calculatedTotal = orderItems.stream()
-                        .mapToDouble(cd -> cd.getPrice() * cd.getQuantity())
-                        .sum();
-                double resolvedTotal = calculatedTotal > 0
-                        ? calculatedTotal
-                        : (totalPrice != null ? totalPrice : 0d);
+        List<CartDetails> orderItems = cartDetails;
+        if (selectedCartDetailIds != null && !selectedCartDetailIds.isEmpty()) {
+            Set<Long> selectedIdSet = selectedCartDetailIds.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            orderItems = cartDetails.stream()
+                    .filter(cd -> cd != null && selectedIdSet.contains(cd.getId()))
+                    .collect(Collectors.toList());
+        }
 
-                // Create order
-                Order order = new Order();
-                order.setUser(user);
-                order.setReceiverName(receiverName);
-                order.setReceiverAddress(receiverAddress);
-                order.setReceiverPhone(receiverPhone);
-                order.setStatus("Chưa được xử lý");
-                //
+        if (orderItems.isEmpty()) {
+            return;
+        }
 
-                order.setPaymentMethod(paymentMethod);
-                order.setPaymentStatus("Thanh toán thành công");
-                order.setPaymentRef(paymentMethod.equals("COD") ? "UNKNOWN" : uuid);
-                order.setTotalPrice(resolvedTotal);
-                order = this.orderRepository.save(order);
+        // validate tồn kho trước khi tạo đơn
+        Map<Long, String> stockErrors = validateStockAvailability(orderItems);
+        if (!stockErrors.isEmpty()) {
+            throw new RuntimeException("Không đủ hàng: " + String.join(", ", stockErrors.values()));
+        }
 
-                // create orderDetail
+        double calculatedTotal = orderItems.stream()
+                .mapToDouble(cd -> cd.getPrice() * cd.getQuantity())
+                .sum();
+        double resolvedTotal = calculatedTotal > 0
+                ? calculatedTotal
+                : (totalPrice != null ? totalPrice : 0d);
 
-                for (CartDetails cd : orderItems) {
-                    OrderDetail orderDetail = new OrderDetail();
-                    orderDetail.setOrder(order);
-                    orderDetail.setProduct(cd.getProduct());
-                    orderDetail.setPrice(cd.getPrice());
-                    orderDetail.setQuantity(cd.getQuantity());
+        // Create order
+        Order order = new Order();
+        order.setUser(user);
+        order.setReceiverName(receiverName);
+        order.setReceiverAddress(receiverAddress);
+        order.setReceiverPhone(receiverPhone);
+        order.setStatus("Chưa được xử lý");
+        order.setPaymentMethod(paymentMethod);
+        order.setPaymentStatus("Thanh toán thành công");
+        order.setPaymentRef("COD".equals(paymentMethod) ? "UNKNOWN" : uuid);
+        order.setTotalPrice(resolvedTotal);
+        order = this.orderRepository.save(order);
 
-                    this.orderDetailRepository.save(orderDetail);
-                }
+        // create orderDetail + build map trừ kho
+        Map<Long, Long> productQuantities = new HashMap<>();
 
-                // Delete cart_detail and cart sau đó
-                for (CartDetails cd : orderItems) {
-                    this.cartDetailsRepository.deleteById(cd.getId());
-                }
+        for (CartDetails cd : orderItems) {
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setOrder(order);
+            orderDetail.setProduct(cd.getProduct());
+            orderDetail.setPrice(cd.getPrice());
+            orderDetail.setQuantity(cd.getQuantity());
+            this.orderDetailRepository.save(orderDetail);
 
-                if (orderItems.size() == cartDetails.size()) {
-                    this.cartRepository.deleteById(cart.getId());
-                    clearSessionCartState(session);
-                } else {
-                    long currentSum = cart.getSum() == null ? 0L : cart.getSum();
-                    long removedQuantity = orderItems.stream()
-                            .mapToLong(cd -> cd == null ? 0L : cd.getQuantity())
-                            .sum();
-                    long newSum = Math.max(0L, currentSum - removedQuantity);
-                    cart.setSum(newSum);
-                    this.cartRepository.save(cart);
-                    Cart refreshedCart = this.cartRepository.findById(cart.getId()).orElse(cart);
-                    updateSessionCartState(session, refreshedCart);
-                }
+            if (cd.getProduct() != null) {
+                Long pid = cd.getProduct().getId();
+                long qty = cd.getQuantity() ;
+                productQuantities.merge(pid, qty, Long::sum);
             }
         }
+
+        // Trừ tồn kho
+        Map<Long, Boolean> stockResults = warehouseService.decreaseStockForMultipleProducts(productQuantities);
+        for (Map.Entry<Long, Boolean> entry : stockResults.entrySet()) {
+            if (Boolean.FALSE.equals(entry.getValue())) {
+                throw new RuntimeException("Không đủ hàng cho sản phẩm: " + entry.getKey());
+            }
+        }
+
+        // Xóa cart_detail tương ứng
+        for (CartDetails cd : orderItems) {
+            this.cartDetailsRepository.deleteById(cd.getId());
+        }
+
+        if (orderItems.size() == cartDetails.size()) {
+            // xóa luôn cart
+            this.cartRepository.deleteById(cart.getId());
+            clearSessionCartState(session);
+            session.removeAttribute("cartId");
+        } else {
+            // còn lại một phần cart
+            Cart refreshedCart = this.cartRepository.findById(cart.getId()).orElse(cart);
+            updateSessionCartState(session, refreshedCart);
+        }
+    }
+
+    public Cart fetchCartByUser(User user) {
+        return this.cartRepository.findByUser(user);
+    }
+
+    public void updatePaymentStatus(String paymentRef, String paymentStatus) {
+        Order order = this.orderRepository.findByPaymentRef(paymentRef);
+        if (order != null) {
+            order.setPaymentStatus(paymentStatus);
+        }
+    }
+
+    // ===================== stock helpers =====================
+
+    // Kiểm tra tồn kho trước khi đặt hàng
+    public Map<Long, String> validateStockAvailability(List<CartDetails> cartDetails) {
+        Map<Long, String> errors = new HashMap<>();
+        if (cartDetails == null) {
+            return errors;
+        }
+
+        for (CartDetails cd : cartDetails) {
+            if (cd == null || cd.getProduct() == null) {
+                continue;
+            }
+            Long productId = cd.getProduct().getId();
+            long requestedQuantity = cd.getQuantity() ;
+            Long availableQuantityObj = warehouseService.getStockQuantity(productId);
+            long availableQuantity = availableQuantityObj == null ? 0L : availableQuantityObj.longValue();
+
+            if (availableQuantity < requestedQuantity) {
+                errors.put(productId, String.format(
+                        "Sản phẩm '%s' chỉ còn %d sản phẩm",
+                        cd.getProduct().getName(),
+                        availableQuantity));
+            }
+        }
+        return errors;
     }
 
     private void updateSessionCartState(HttpSession session, Cart cart) {
         if (session == null) {
             return;
         }
-        long totalQuantity = cart != null && cart.getSum() != null ? cart.getSum() : 0L;
+
+        long totalQuantity = 0L;
+        if (cart != null && cart.getCartDetails() != null) {
+            for (CartDetails cd : cart.getCartDetails()) {
+                    totalQuantity += cd.getQuantity();
+            }
+            cart.setSum(totalQuantity);
+            this.cartRepository.save(cart);
+        }
+
         session.setAttribute("sum", totalQuantity);
         session.setAttribute("cartItemCount", countDistinctCartItems(cart));
     }
@@ -306,17 +399,12 @@ public class ProductService {
                 .size();
     }
 
-    public Cart fetchCartByUser(User user) {
-        return this.cartRepository.findByUser(user);
-    }
+    // ===================== filterProducts =====================
 
-    public void updatePaymentStatus(String paymentRef, String paymentStatus) {
-        Order order = this.orderRepository.findByPaymentRef(paymentRef);
-        order.setPaymentStatus(paymentStatus);
-    }
-//=====================sửa thêm start==========================
-    public List<Product> filterProducts(List<String> factories, List<String> targets, List<String> priceRanges,
-            String sortMode) {
+    public List<Product> filterProducts(List<String> factories,
+                                        List<String> targets,
+                                        List<String> priceRanges,
+                                        String sortMode) {
         List<Product> allProducts = this.productRepository.findAll();
         if (allProducts.isEmpty()) {
             return allProducts;
@@ -334,11 +422,15 @@ public class ProductService {
         return filtered;
     }
 
-    private boolean matchesProduct(Product product, Set<String> factorySet, Set<String> targetSet, Set<String> priceSet) {
+    private boolean matchesProduct(Product product,
+                                   Set<String> factorySet,
+                                   Set<String> targetSet,
+                                   Set<String> priceSet) {
         String normalizedFactory = normalizeValue(product.getFactory());
         String normalizedTarget = normalizeValue(product.getTarget());
         String normalizedName = normalizeValue(product.getName());
         String searchableText = buildSearchableKeywords(product);
+
         return matchesFactory(normalizedFactory, factorySet)
                 && matchesTarget(targetSet, normalizedTarget, normalizedName, searchableText)
                 && matchesPrice(product.getPrice(), priceSet);
@@ -356,8 +448,10 @@ public class ProductService {
         return false;
     }
 
-    private boolean matchesTarget(Set<String> selectedTargets, String normalizedTargetField, String normalizedName,
-            String searchableText) {
+    private boolean matchesTarget(Set<String> selectedTargets,
+                                  String normalizedTargetField,
+                                  String normalizedName,
+                                  String searchableText) {
         if (selectedTargets.isEmpty()) {
             return true;
         }
@@ -375,8 +469,10 @@ public class ProductService {
         return false;
     }
 
-    private boolean matchesTargetCode(String selectedTarget, String normalizedTargetField, String normalizedName,
-            String searchableText) {
+    private boolean matchesTargetCode(String selectedTarget,
+                                      String normalizedTargetField,
+                                      String normalizedName,
+                                      String searchableText) {
         if (selectedTarget == null) {
             return false;
         }
@@ -400,7 +496,9 @@ public class ProductService {
         return selectedTarget.equals(normalizedTargetField);
     }
 
-    private boolean matchesOtherCategories(String normalizedTargetField, String normalizedName, String searchableText) {
+    private boolean matchesOtherCategories(String normalizedTargetField,
+                                           String normalizedName,
+                                           String searchableText) {
         for (String code : TARGET_KEYWORDS.keySet()) {
             if ("KHAC".equals(code)) {
                 continue;
@@ -468,19 +566,6 @@ public class ProductService {
         return normalizeSynonymMap(raw);
     }
 
-    // private static Map<String, Set<String>> createTargetKeywordMap() {
-    //     Map<String, List<String>> raw = new HashMap<>();
-    //     raw.put("GAMING", List.of("GHE", "GHE-AN", "GHE-AN-BOC-NI", "GHE-XOAY", "GHE-CONG-THAI-HOC", "SOFA", "SALON",
-    //             "GHE-THU-GIAN", "BO-BAN-GHE"));
-    //     raw.put("SINHVIEN-VANPHONG",
-    //             List.of("BAN", "BAN-LAM-VIEC", "BAN-HOC", "BAN-MAY-TINH", "BAN-VAN-PHONG", "BAN-AN", "BAN-DAU-GIUONG",
-    //                     "BAN-TRANG-DIEM", "BO-BAN-GHE"));
-    //     raw.put("MONG-NHE", List.of("TU", "TU-QUAN-AO", "TU-GO", "TU-NHUA", "TU-DAU-GIUONG", "TU-LI"));
-    //     raw.put("DOANH-NHAN", List.of("KE", "KE-SACH", "KE-TRANG-TRI", "KE-GO", "KE-TIVI"));
-    //     raw.put("THIET-KE-DO-HOA", List.of("GIUONG", "GIUONG-NGU", "BO-GIUONG", "GIUONG-GO", "GIUONG-CAO"));
-    //     return normalizeSynonymMap(raw);
-    // }
-
     private static Map<String, Set<String>> createTargetKeywordMap() {
         Map<String, List<String>> raw = new HashMap<>();
         raw.put("GAMING",
@@ -514,8 +599,10 @@ public class ProductService {
         return Collections.unmodifiableMap(normalized);
     }
 
-    private static boolean matchWithSynonyms(String normalizedFieldValue, String fallbackSearchText,
-            String selectedCode, Map<String, Set<String>> synonymsMap) {
+    private static boolean matchWithSynonyms(String normalizedFieldValue,
+                                             String fallbackSearchText,
+                                             String selectedCode,
+                                             Map<String, Set<String>> synonymsMap) {
         Set<String> synonyms = synonymsMap.getOrDefault(selectedCode, Collections.singleton(selectedCode));
         boolean hasFieldValue = normalizedFieldValue != null && !normalizedFieldValue.isEmpty();
         for (String synonym : synonyms) {
@@ -531,6 +618,7 @@ public class ProductService {
         }
         return false;
     }
+
     private static boolean valueMatches(String value, String keyword) {
         return value.equals(keyword) || value.contains(keyword);
     }
@@ -569,7 +657,7 @@ public class ProductService {
     private static void putPriceRange(Map<String, double[]> ranges, String code, double min, double max) {
         String normalizedCode = normalizeValue(code);
         if (normalizedCode != null) {
-            ranges.put(normalizedCode, new double[] { min, max });
+            ranges.put(normalizedCode, new double[]{min, max});
         }
     }
 
@@ -588,7 +676,8 @@ public class ProductService {
                 .toUpperCase();
         return normalized.isEmpty() ? null : normalized;
     }
-    //=====================sửa thêm end==========================
+
+    // ===================== search =====================
 
     public List<Product> searchByName(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
@@ -618,4 +707,3 @@ public class ProductService {
         }
     }
 }
-
