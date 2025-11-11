@@ -17,6 +17,7 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
     <link href="/css/styles.css" rel="stylesheet" />
     <link href="/css/custom.css" rel="stylesheet" />
     <link href="/css/admin.css" rel="stylesheet" />
+    <link href="/css/admin-product-media.css" rel="stylesheet" />
     <script
       src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
       crossorigin="anonymous"
@@ -179,24 +180,36 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
                       <form:option value="LOAI3">LOAI3</form:option>
                     </form:select>
                   </div>
-                  <div class="mb-3 col-12 col-md-6">
-                    <label for="mediaFiles" class="form-label"
-                      >Hình/Video (tối đa 5):</label
+                  <div class="mb-3 col-12">
+                    <label class="form-label d-block"
+                      >Image/Video (max 5)</label
                     >
-                    <input
-                      class="form-control"
-                      type="file"
-                      id="mediaFiles"
-                      name="mediaFiles"
-                      accept=".png,.jpg,.jpeg,.webp,.gif,.mp4,.webm,.mov"
-                      multiple
-                    />
+                    <div id="mediaManager" class="media-manager">
+                      <div class="media-manager-header">
+                        <span class="media-manager-title">Media gallery</span>
+                        <button
+                          type="button"
+                          id="mediaManagerAdd"
+                          class="btn btn-success btn-sm"
+                        >
+                          Add new
+                        </button>
+                      </div>
+                      <div class="media-manager-list"></div>
+                      <div class="media-manager-empty">
+                        No files yet. Click "Add new" to start.
+                      </div>
+                      <div class="media-manager-limit" style="display: none">
+                        Only up to 5 files are supported.
+                      </div>
+                    </div>
                     <small class="form-text text-muted">
-                      Tập tin mới sẽ thay thế các hình/video hiện có. Chỉ lưu 5 file đầu.
+                      Supported formats: JPG, PNG, GIF, MP4, WebM. Selected
+                      files show in a row you can change or delete before
+                      submit.
                     </small>
-                    <div id="mediaFilesList" class="mt-2"></div>
-                    <small id="mediaFilesMessage" class="text-danger"></small>
                   </div>
+
                   <c:if test="${not empty newProduct.medias}">
                     <div class="mb-3 col-12">
                       <p class="fw-semibold mb-2">Hình/Video hiện có:</p>
@@ -204,19 +217,24 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
                         <c:forEach var="media" items="${newProduct.medias}">
                           <div
                             class="border rounded p-2 text-center"
-                            style="width: 90px; height: 90px; overflow: hidden;"
+                            style="width: 90px; height: 90px; overflow: hidden"
                           >
                             <c:choose>
-                              <c:when test="${media.mediaType.name() == 'VIDEO'}">
-                                <i class="fa fa-play-circle fa-2x text-warning"></i>
+                              <c:when
+                                test="${media.mediaType.name() == 'VIDEO'}"
+                              >
+                                <i
+                                  class="fa fa-play-circle fa-2x text-warning"
+                                ></i>
                                 <small>Video</small>
                               </c:when>
                               <c:otherwise>
                                 <img
                                   class="img-fluid"
-                                  src="/images/product/${media.fileName}"
+                                  src="/images/product/${newProduct.id}/${media.fileName}"
                                   alt="${newProduct.name} gallery"
-                                  style="min-height: 100%; object-fit: cover;"
+                                  onerror="this.onerror=null; this.src='/images/product/${media.fileName}';"
+                                  style="min-height: 100%; object-fit: cover"
                                 />
                               </c:otherwise>
                             </c:choose>
@@ -243,6 +261,7 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
       crossorigin="anonymous"
     ></script>
     <script src="js/scripts.js"></script>
+    <script src="/js/admin-product-media.js"></script>
     <script src="js/admin.js"></script>
   </body>
 </html>

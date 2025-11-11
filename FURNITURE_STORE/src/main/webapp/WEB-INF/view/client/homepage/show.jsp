@@ -137,7 +137,7 @@
                         <c:when test="${not empty products}">
                             <c:forEach var="product" items="${products}" varStatus="status">
                                 <c:if test="${status.index lt 3}">
-                                    <a class="spotlight-product" href="/product/${product.id}">
+                                    <a class="spotlight-product" href="/images/product/${product.id}/${product.image}">
                                         <div class="spotlight-index">0${status.count}</div>
                                         <div class="spotlight-copy">
                                             <p class="spotlight-name mb-1">${product.name}</p>

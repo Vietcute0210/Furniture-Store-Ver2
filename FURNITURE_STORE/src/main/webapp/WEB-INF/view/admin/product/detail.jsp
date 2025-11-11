@@ -1,7 +1,8 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %> <%@ taglib prefix="c"
 uri="http://java.sun.com/jsp/jstl/core" %> <%@ taglib prefix="form"
 uri="http://www.springframework.org/tags/form" %> <%@ taglib prefix="fmt"
-uri="http://java.sun.com/jsp/jstl/fmt" %>
+uri="http://java.sun.com/jsp/jstl/fmt" %> <%@ taglib prefix="fn"
+uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,21 +18,11 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
     <link href="/css/styles.css" rel="stylesheet" />
     <link href="/css/custom.css" rel="stylesheet" />
     <link href="/css/admin.css" rel="stylesheet" />
+    <link href="/css/admin-product-media.css" rel="stylesheet" />
     <script
       src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
       crossorigin="anonymous"
     ></script>
-
-    <script>
-      $(document).ready(() => {
-        const productFile = $("#productFile");
-        productFile.change(function (e) {
-          const imgURL = URL.createObjectURL(e.target.files[0]);
-          $("#productPreview").attr("src", imgURL);
-          $("#productPreview").css({ display: "block" });
-        });
-      });
-    </script>
   </head>
 
   <body class="sb-nav-fixed">
@@ -66,11 +57,74 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
                   <h3>Product Details with id = ${id}</h3>
                 </div>
                 <hr />
-                <div class="card" style="width: 60%">
-                  <img
-                    src="/images/product/${product.image}"
-                    alt="product-preview"
-                  />
+                <div class="card w-100">
+                  <div class="card-header">Media Gallery</div>
+                  <div class="card-body">
+                    <c:set
+                      var="mediaCount"
+                      value="${fn:length(product.medias)}"
+                    />
+                    <div class="detail-media-grid">
+                      <c:forEach
+                        var="media"
+                        items="${product.medias}"
+                        varStatus="mediaStatus"
+                      >
+                        <c:if test="${mediaStatus.index < 5}">
+                          <c:url
+                            value="/images/product/${product.id}/${media.fileName}"
+                            var="mediaUrl"
+                          />
+                          <div class="detail-media-card">
+                            <div class="media-thumb">
+                              <c:choose>
+                                <c:when test="${media.mediaType == 'VIDEO'}">
+                                  <video
+                                    src="${mediaUrl}"
+                                    controls
+                                    playsinline
+                                    preload="metadata"
+                                  ></video>
+                                </c:when>
+                                <c:otherwise>
+                                  <img
+                                    src="${mediaUrl}"
+                                    alt="${media.fileName}"
+                                    onerror="this.onerror=null; this.src='/images/product/${media.fileName}';"
+                                  />
+                                </c:otherwise>
+                              </c:choose>
+                            </div>
+                            <div class="media-info">
+                              <span class="media-label">${media.fileName}</span>
+                              <span class="media-type">${media.mediaType}</span>
+                            </div>
+                          </div>
+                        </c:if>
+                      </c:forEach>
+                      <c:if test="${mediaCount < 5}">
+                        <c:forEach
+                          begin="1"
+                          end="${5 - mediaCount}"
+                          varStatus="fillStatus"
+                        >
+                          <div
+                            class="detail-media-card detail-media-card--empty"
+                          >
+                            <div class="media-thumb">
+                              <i class="fas fa-photo-video"></i>
+                            </div>
+                            <div class="media-info">
+                              <span class="media-label">Empty slot</span>
+                              <span class="media-type"
+                                >Slot ${mediaCount + fillStatus.index + 1}</span
+                              >
+                            </div>
+                          </div>
+                        </c:forEach>
+                      </c:if>
+                    </div>
+                  </div>
                   <div class="card-header">Product Information</div>
                   <ul class="list-group list-group-flush">
                     <li class="list-group-item">ID : ${product.id}</li>
