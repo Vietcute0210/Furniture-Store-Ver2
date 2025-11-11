@@ -4,6 +4,8 @@ $(document).ready(function () {
   const SELECTION_STORAGE_KEY = "furniture_store_cart_selection";
   const CART_QUANTITY_ENDPOINT = "/api/update-cart-quantity";
   const CART_SYNC_ERROR_COOLDOWN = 1500;
+  const CART_QUANTITY_INPUT_SELECTOR =
+    "input[data-cart-detail-id][data-cart-detail-price]";
   let selectionStateMap = null;
   let lastQuantitySyncErrorAt = 0;
   let lastQuantitySyncErrorMessage = "";
@@ -388,7 +390,7 @@ $(document).ready(function () {
   // Compute cart total using raw quantity/price data for accuracy
   function updateTotal() {
     let total = 0;
-    const cartInputs = $("input[data-cart-detail-id]");
+    const cartInputs = $(CART_QUANTITY_INPUT_SELECTOR);
     if (cartInputs.length) {
       cartInputs.each(function () {
         const cartDetailId = $(this).data("cart-detail-id");
@@ -458,7 +460,7 @@ $(document).ready(function () {
   }
 
   function refreshCartDisplayFromCurrentValues() {
-    const visibleInputs = $("input[data-cart-detail-id]");
+    const visibleInputs = $(CART_QUANTITY_INPUT_SELECTOR);
     if (visibleInputs.length) {
       visibleInputs.each(function () {
         const input = $(this);
@@ -529,7 +531,8 @@ $(document).ready(function () {
       const qty = parseInt(map[id], 10);
       if (!isFinite(qty)) return;
 
-      const visibleInput = $(`input[data-cart-detail-id='${id}']`);
+      const quantitySelectorForId = `${CART_QUANTITY_INPUT_SELECTOR}[data-cart-detail-id='${id}']`;
+      const visibleInput = $(quantitySelectorForId);
       if (visibleInput.length) {
         visibleInput.val(qty);
         syncHiddenQuantity(visibleInput, qty);
@@ -600,7 +603,7 @@ $(document).ready(function () {
     .on("click", function () {
       const input = $(this)
         .closest(".quantity")
-        .find("input[data-cart-detail-id]");
+        .find(CART_QUANTITY_INPUT_SELECTOR);
       if (!input.length) {
         return;
       }
@@ -616,7 +619,7 @@ $(document).ready(function () {
     .on("click", function () {
       const input = $(this)
         .closest(".quantity")
-        .find("input[data-cart-detail-id]");
+        .find(CART_QUANTITY_INPUT_SELECTOR);
       if (!input.length) {
         return;
       }
@@ -627,7 +630,7 @@ $(document).ready(function () {
       applyQuantityChange(input, currentValue - 1);
     });
 
-  $("input[data-cart-detail-id]")
+  $(CART_QUANTITY_INPUT_SELECTOR)
     .off("change.cartQuantity blur.cartQuantity")
     .on("change.cartQuantity blur.cartQuantity", function () {
       const input = $(this);
