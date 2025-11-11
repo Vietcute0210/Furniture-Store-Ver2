@@ -1,6 +1,8 @@
 package com.group10.furniture_store.domain;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -12,7 +14,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
@@ -60,6 +64,11 @@ public class Product implements Serializable {
     private long sold;
     private String factory;
     private String target;
+    
+    //viet them 3 dong duoi
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC")
+    private List<ProductMedia> medias = new ArrayList<>();
 
     public long getId() {
         return id;
@@ -141,6 +150,27 @@ public class Product implements Serializable {
         this.target = target;
     }
 
+    //viet sua bat dau
+    public List<ProductMedia> getMedias() {
+        return medias;
+    }
+
+    public void setMedias(List<ProductMedia> medias) {
+        this.medias.clear();
+        if (medias != null) {
+            medias.forEach(this::addMedia);
+        }
+    }
+
+    public void addMedia(ProductMedia media) {
+        if (media == null) {
+            return;
+        }
+        media.setProduct(this);
+        this.medias.add(media);
+    }
+
+    //viet sua ket thuc
     public Warehouse getWarehouse() {
         return warehouse;
     }

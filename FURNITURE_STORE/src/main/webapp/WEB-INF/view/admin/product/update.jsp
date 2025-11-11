@@ -25,18 +25,31 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
 
     <script>
       $(document).ready(() => {
-        const avatarFile = $("#avatarFile");
-        const orgImage = "${newProduct.image}";
-        if (orgImage) {
-          const urlImage = "/images/product/" + orgImage;
-          $("#avatarPreview").attr("src", urlImage);
-          $("#avatarPreview").css({ display: "block" });
+        const mediaInput = $("#mediaFiles");
+        const mediaList = $("#mediaFilesList");
+        const mediaMessage = $("#mediaFilesMessage");
+        const maxFiles = 5;
+
+        if (!mediaInput.length) {
+          return;
         }
 
-        avatarFile.change(function (e) {
-          const imgURL = URL.createObjectURL(e.target.files[0]);
-          $("#avatarPreview").attr("src", imgURL);
-          $("#avatarPreview").css({ display: "block" });
+        const renderFiles = (files) => {
+          mediaList.empty();
+          files.slice(0, maxFiles).forEach((file) => {
+            const badge = `<span class="badge bg-secondary me-1 mb-1">${file.name}</span>`;
+            mediaList.append(badge);
+          });
+          if (files.length > maxFiles) {
+            mediaMessage.text(`Chỉ sử dụng ${maxFiles} file đầu tiên.`);
+          } else {
+            mediaMessage.text("");
+          }
+        };
+
+        mediaInput.on("change", () => {
+          const files = Array.from(mediaInput[0].files || []);
+          renderFiles(files);
         });
       });
     </script>
@@ -74,7 +87,7 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
                 <hr />
                 <form:form
                   method="post"
-                  action="/admin/product/update"
+                  action="/admin/product/update/${newProduct.id}"
                   class="row"
                   enctype="multipart/form-data"
                   modelAttribute="newProduct"
@@ -167,22 +180,51 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
                     </form:select>
                   </div>
                   <div class="mb-3 col-12 col-md-6">
-                    <label for="productFile" class="form-label">Image:</label>
+                    <label for="mediaFiles" class="form-label"
+                      >Hình/Video (tối đa 5):</label
+                    >
                     <input
                       class="form-control"
                       type="file"
-                      id="avatarFile"
-                      accept=".png, .jpg, .jpeg"
-                      name="productFile"
+                      id="mediaFiles"
+                      name="mediaFiles"
+                      accept=".png,.jpg,.jpeg,.webp,.gif,.mp4,.webm,.mov"
+                      multiple
                     />
+                    <small class="form-text text-muted">
+                      Tập tin mới sẽ thay thế các hình/video hiện có. Chỉ lưu 5 file đầu.
+                    </small>
+                    <div id="mediaFilesList" class="mt-2"></div>
+                    <small id="mediaFilesMessage" class="text-danger"></small>
                   </div>
-                  <div class="col-12 mb-3">
-                    <img
-                      style="max-height: 250px; display: none"
-                      alt="avatar preview"
-                      id="avatarPreview"
-                    />
-                  </div>
+                  <c:if test="${not empty newProduct.medias}">
+                    <div class="mb-3 col-12">
+                      <p class="fw-semibold mb-2">Hình/Video hiện có:</p>
+                      <div class="d-flex flex-wrap gap-2">
+                        <c:forEach var="media" items="${newProduct.medias}">
+                          <div
+                            class="border rounded p-2 text-center"
+                            style="width: 90px; height: 90px; overflow: hidden;"
+                          >
+                            <c:choose>
+                              <c:when test="${media.mediaType.name() == 'VIDEO'}">
+                                <i class="fa fa-play-circle fa-2x text-warning"></i>
+                                <small>Video</small>
+                              </c:when>
+                              <c:otherwise>
+                                <img
+                                  class="img-fluid"
+                                  src="/images/product/${media.fileName}"
+                                  alt="${newProduct.name} gallery"
+                                  style="min-height: 100%; object-fit: cover;"
+                                />
+                              </c:otherwise>
+                            </c:choose>
+                          </div>
+                        </c:forEach>
+                      </div>
+                    </div>
+                  </c:if>
                   <div class="col-12 mb-5">
                     <button type="submit" class="btn btn-warning">
                       Update

@@ -26,11 +26,31 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
 
     <script>
       $(document).ready(() => {
-        const avatarFile = $("#avatarFile");
-        avatarFile.change(function (e) {
-          const imgURL = URL.createObjectURL(e.target.files[0]);
-          $("#avatarPreview").attr("src", imgURL);
-          $("#avatarPreview").css({ display: "block" });
+        const mediaInput = $("#mediaFiles");
+        const mediaList = $("#mediaFilesList");
+        const mediaMessage = $("#mediaFilesMessage");
+        const maxFiles = 5;
+
+        if (!mediaInput.length) {
+          return;
+        }
+
+        const renderFiles = (files) => {
+          mediaList.empty();
+          files.slice(0, maxFiles).forEach((file) => {
+            const badge = `<span class="badge bg-secondary me-1 mb-1">${file.name}</span>`;
+            mediaList.append(badge);
+          });
+          if (files.length > maxFiles) {
+            mediaMessage.text(`Chỉ sử dụng ${maxFiles} file đầu tiên.`);
+          } else {
+            mediaMessage.text("");
+          }
+        };
+
+        mediaInput.on("change", () => {
+          const files = Array.from(mediaInput[0].files || []);
+          renderFiles(files);
         });
       });
     </script>
@@ -167,21 +187,23 @@ uri="http://java.sun.com/jsp/jstl/fmt" %>
                   </div>
 
                   <div class="mb-3 col-12 col-md-6">
-                    <label for="productFile" class="form-label">Image:</label>
+                    <label for="mediaFiles" class="form-label"
+                      >Hình/Video (tối đa 5):</label
+                    >
                     <input
                       class="form-control"
                       type="file"
-                      id="productFile"
-                      accept=".png, .jpg, .jpeg"
-                      name="productFile"
+                      id="mediaFiles"
+                      name="mediaFiles"
+                      accept=".png,.jpg,.jpeg,.webp,.gif,.mp4,.webm,.mov"
+                      multiple
                     />
-                  </div>
-                  <div class="col-12 mb-3">
-                    <img
-                      style="max-height: 250px; display: none"
-                      alt="product preview"
-                      id="productPreview"
-                    />
+                    <small class="form-text text-muted">
+                      Chấp nhận ảnh JPG/PNG/GIF hoặc video MP4/WebM. Chỉ lưu 5 file đầu
+                      tiên.
+                    </small>
+                    <div id="mediaFilesList" class="mt-2"></div>
+                    <small id="mediaFilesMessage" class="text-danger"></small>
                   </div>
 
                   <div class="col-12 mb-5">

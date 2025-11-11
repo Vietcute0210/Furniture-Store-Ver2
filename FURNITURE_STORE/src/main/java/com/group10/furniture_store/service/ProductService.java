@@ -77,7 +77,7 @@ public class ProductService {
     }
 
     public Product getProductById(long id) {
-        Optional<Product> productOptional = this.productRepository.findById(id);
+        Optional<Product> productOptional = this.productRepository.findWithMediasById(id);
         return productOptional.orElse(null);
     }
 

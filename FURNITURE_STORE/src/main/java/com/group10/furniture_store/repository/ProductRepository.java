@@ -10,12 +10,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 import com.group10.furniture_store.domain.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findById(Long id);
+    //viet sua 2 dong duoi
+    @EntityGraph(attributePaths = "medias")
+    Optional<Product> findWithMediasById(Long id);
 
     Page<Product> findAll(Specification<Product> specs, Pageable pageable);
 

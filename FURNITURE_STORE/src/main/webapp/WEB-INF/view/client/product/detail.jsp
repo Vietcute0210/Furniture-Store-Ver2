@@ -109,58 +109,50 @@ uri="http://www.springframework.org/tags/form" %>
                     <i class="fa fa-chevron-right"></i>
                   </button>
                   <div class="product-media-thumbs">
-                    <button
-                      class="media-thumb active"
-                      type="button"
-                      data-media-type="image"
-                      data-media-src="/images/product/${product.image}"
-                      aria-label="Ảnh chính"
-                    >
-                      <img
-                        src="/images/product/${product.image}"
-                        alt="${product.name}"
-                      />
-                    </button>
-                    <button
-                      class="media-thumb"
-                      type="button"
-                      data-media-type="image"
-                      data-media-src="/client/img/anh1.jpg"
-                      aria-label="Góc chụp 01"
-                    >
-                      <img src="/client/img/anh1.jpg" alt="Góc chụp phụ 1" />
-                    </button>
-                    <button
-                      class="media-thumb"
-                      type="button"
-                      data-media-type="image"
-                      data-media-src="/client/img/anh2.webp"
-                      aria-label="Góc chụp 02"
-                    >
-                      <img src="/client/img/anh2.webp" alt="Góc chụp phụ 2" />
-                    </button>
-                    <button
-                      class="media-thumb"
-                      type="button"
-                      data-media-type="image"
-                      data-media-src="/client/img/anh3.jpg"
-                      aria-label="Góc chụp 03"
-                    >
-                      <img src="/client/img/anh3.jpg" alt="Góc chụp phụ 3" />
-                    </button>
-                    <button
-                      class="media-thumb media-thumb--video"
-                      type="button"
-                      data-media-type="video"
-                      data-media-src="https://www.w3schools.com/html/mov_bbb.mp4"
-                      aria-label="Video demo"
-                    >
-                      <span class="media-thumb__video-icon">
-                        <i class="fa fa-play"></i>
-                      </span>
-                      <small>Video demo</small>
-                    </button>
+                    <c:choose>
+                      <c:when test="${not empty product.medias}">
+                        <c:forEach var="media" items="${product.medias}" varStatus="status">
+                          <button
+                            class="media-thumb ${status.first ? 'active' : ''}"
+                            type="button"
+                            data-media-type="${media.mediaType}"
+                            data-media-src="/images/product/${media.fileName}"
+                            aria-label="${media.mediaType.name() == 'VIDEO' ? 'Video' : 'Ảnh'}"
+                          >
+                            <c:choose>
+                              <c:when test="${media.mediaType.name() == 'VIDEO'}">
+                                <span class="media-thumb__video-icon">
+                                  <i class="fa fa-play"></i>
+                                </span>
+                                <small>Video demo</small>
+                              </c:when>
+                              <c:otherwise>
+                                <img
+                                  src="/images/product/${media.fileName}"
+                                  alt="${product.name} gallery thumbnail"
+                                />
+                              </c:otherwise>
+                            </c:choose>
+                          </button>
+                        </c:forEach>
+                      </c:when>
+                      <c:otherwise>
+                        <button
+                          class="media-thumb active"
+                          type="button"
+                          data-media-type="image"
+                          data-media-src="/images/product/${product.image}"
+                          aria-label="Ảnh chính"
+                        >
+                          <img
+                            src="/images/product/${product.image}"
+                            alt="${product.name} gallery thumbnail"
+                          />
+                        </button>
+                      </c:otherwise>
+                    </c:choose>
                   </div>
+
                 </div>
               </div>
               <div class="col-lg-6">
@@ -432,3 +424,4 @@ uri="http://www.springframework.org/tags/form" %>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
   </body>
 </html>
+
